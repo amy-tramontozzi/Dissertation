@@ -77,7 +77,12 @@ stat_dis <- read_excel("station_district.xlsx")
 stat_dis$station <- str_to_title(stat_dis$station)
 stat_dis$station <- as.factor(stat_dis$station)
 climate_data <- merge(climate_data, stat_dis, by = "station")
+climate_data$district <- as.factor(climate_data$district)
 ### RENAMING DISTRICTS TO MERGE
+# Rename insurance states
+
+# Rename insurance districts
+insmissing.dis <- levels(climate_data$district)[!(levels(climate_data$district) %in% levels(ins$district))]
 
 #Rename rainfall states
 levels(rain$state)[levels(rain$state)=='A and N Island (Ut)'] <- 'Andaman and Nicobar Islands'
