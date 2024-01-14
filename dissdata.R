@@ -37,7 +37,6 @@ prod1997$district <- as.factor(prod1997$district)
 # Load and tidy insurance data
 ins <- read_excel("districtdata.xlsx")
 ins <- ins[,-24:-41]
-ins <- ins[-c(2227:1048575), ]
 ins$ins.units <- as.numeric(gsub(",","",ins$ins.units))
 ins$farmers <- as.numeric(gsub(",","",ins$farmers))
 ins$loanee <- as.numeric(gsub(",","",ins$loanee))
@@ -54,16 +53,7 @@ ins$state <- as.factor(ins$state)
 ins$year <- as.factor(ins$year)
 ins$district <- as.factor(ins$district)
 
-# Lit review plots
-ins %>%
-  group_by(year) %>%
-  ggplot(aes(year, farmers)) +
-  geom_col() +
-  labs(title = "Insured Farmers Under the PMFBY, 2018-2022", x = "", y = "Insured Farmers") +
-  theme_minimal()
-
-
-# Load and tidy rainfall data
+# Load and tidy CRIS rainfall data
 rain <- read_excel("indian_rain_data.xlsx")
 names(rain)[names(rain) == "fed.ptdef"] <- "feb.ptdef"
 rain$year <- as.numeric(rain$year)
@@ -74,6 +64,18 @@ rain$district <- sub("&", "and", rain$district)
 rain$state <- as.factor(rain$state)
 rain$district <- as.factor(rain$district)
 rain$year <- as.factor(rain$year)
+
+# Load and tidy climate data
+climate_data <- read_excel("climate_data_v5.xlsx")
+climate_data$station <- str_to_title(climate_data$station)
+climate_data$year <- as.factor(climate_data$year)
+climate_data$station <- as.factor(climate_data$station)
+climate_data$stationID <- as.factor(climate_data$stationID)
+
+
+### RENAMING STATIONS TO DISTRICTS
+
+### RENAMING DISTRICTS TO MERGE
 
 #Rename rainfall states
 levels(rain$state)[levels(rain$state)=='A and N Island (Ut)'] <- 'Andaman and Nicobar Islands'
