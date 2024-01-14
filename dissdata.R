@@ -72,9 +72,11 @@ climate_data$year <- as.factor(climate_data$year)
 climate_data$station <- as.factor(climate_data$station)
 climate_data$stationID <- as.factor(climate_data$stationID)
 
-
 ### RENAMING STATIONS TO DISTRICTS
-
+stat_dis <- read_excel("station_district.xlsx")
+stat_dis$station <- str_to_title(stat_dis$station)
+stat_dis$station <- as.factor(stat_dis$station)
+climate_data <- merge(climate_data, stat_dis, by = "station")
 ### RENAMING DISTRICTS TO MERGE
 
 #Rename rainfall states
