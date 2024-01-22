@@ -374,14 +374,14 @@ levels(prod1997$district)[levels(prod1997$district)=='Kadapa'] <- 'Y.S.R.'
 levels(prod1997$district)[levels(prod1997$district)=='Yadgir'] <- 'Yadgiri'
 
 
-
 # Create ins/rain/prod dataframe
-ins_rain <-merge(ins, rain, by=c("district", "state", "year"))
-test <- inner_join(test, prod1997, by = c("district" = "district", "state" = "state", "year" = "year"))
-test$f.it <- test$area.ins/test$area
+ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
+total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
+total$f.it <- total$area.ins/total$area
 
-test.glm <- glm(log(prod) ~ jul.ptdef + aug.ptdef + I(jul.ptdef**2) + I(aug.ptdef**2)
-                + jul.ptdef*f.it + aug.ptdef*f.it + I(jul.ptdef**2)*f.it + I(aug.ptdef**2)*f.it + factor(year) + factor(district), data = test)
+dev.glm <- glm(log(prod) ~ jul.ptdef + aug.ptdef + I(jul.ptdef**2) + I(aug.ptdef**2)
+                + jul.ptdef*f.it + aug.ptdef*f.it + I(jul.ptdef**2)*f.it + I(aug.ptdef**2)*f.it 
+                + factor(year) + factor(district), data = total)
 
 # Create climate/ins 2018 dataframe
 climate_data_noNA <- na.omit(climate_data) # Omit all climate NAs
