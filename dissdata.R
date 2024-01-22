@@ -31,7 +31,7 @@ prod1997$district <- str_to_title(prod1997$district)
 prod1997$year <- str_sub(prod1997$year, end = -8)
 # Convert state, district, and year into factors
 prod1997$state <- as.factor(prod1997$state)
-prod1997$year <- as.factor(prod1997$year)
+prod1997$year <- as.numeric(prod1997$year)
 prod1997$district <- as.factor(prod1997$district)
 
 # Load and tidy insurance data
@@ -62,7 +62,7 @@ rain$state <- sub("&", "and", rain$state)
 rain$district <- sub("&", "and", rain$district)
 rain$state <- as.factor(rain$state)
 rain$district <- as.factor(rain$district)
-rain$year <- as.factor(rain$year)
+#rain$year <- as.factor(rain$year)
 
 # Load and tidy climate data
 climate_data <- read_excel("climate_data_v5.xlsx")
@@ -99,7 +99,11 @@ levels(ins$district)[levels(ins$district)=='Rangareddy'] <- 'Ranga Reddy'
 levels(ins$district)[levels(ins$district)=='South Twenty Four Parganas'] <- 'South 24 Parganas'
 levels(ins$district)[levels(ins$district)=='UttarKannada'] <- 'Uttara Kannada'
 
-
+same_name_diff_state <- ins %>%
+  group_by(district) %>%
+  filter(n_distinct(state) > 1) %>%
+  select(district, state) %>%
+  distinct()
 
 # Rename rain states to ins states
 rainmissing.st <- levels(ins$state)[!(levels(ins$state) %in% levels(rain$state))]
@@ -109,6 +113,11 @@ levels(rain$state)[levels(rain$state)=='Puducherry (Ut)'] <- 'Puducherry'
 levels(rain$state)[levels(rain$state)=='Tamilnadu'] <- 'Tamil Nadu'
 # Rename rain districts to  ins districts
 rainmissing.dis <- levels(ins$district)[!(levels(ins$district) %in% levels(rain$district))]
+
+# Rename Deogarh district 
+rain <- rain %>%
+  mutate(district = if_else(state == "Jharkhand" & district == "Deogarh", "Deoghar", district))
+rain$district <- as.factor(rain$district)
 
 levels(ins$district)[levels(ins$district)=='Ahmednagar'] <- 'Ahmadnagar' # within ins
 levels(ins$district)[levels(ins$district)=='Boudh'] <- 'Baudh'
@@ -122,6 +131,35 @@ levels(ins$district)[levels(ins$district)=='Pauri Garhwal'] <- 'Garhwal'
 levels(ins$district)[levels(ins$district)=='Deogarh'] <- 'Debagarh'
 levels(ins$district)[levels(ins$district)=='Dholpur'] <- 'Dhaulpur'
 levels(ins$district)[levels(ins$district)=='Ayodhya'] <- 'Faizabad'
+levels(ins$district)[levels(ins$district)=='Gorella-Pendra-Marwahi'] <- 'Gaurela-Pendra-Marwahi'
+levels(ins$district)[levels(ins$district)=='Janjgir - Champa'] <- 'Janjgir-Champa'
+levels(ins$district)[levels(ins$district)=='Nabarangpur'] <- 'Nabarangapur'
+levels(ins$district)[levels(ins$district)=='Gondia'] <- 'Gondiya'
+levels(ins$district)[levels(ins$district)=='Gurugram'] <- 'Gurgaon'
+levels(ins$district)[levels(ins$district)=='Haridwar'] <- 'Hardwar'
+levels(ins$district)[levels(ins$district)=='Jalore'] <- 'Jalor'
+levels(ins$district)[levels(ins$district)=='Kabirdham'] <- 'Kabeerdham'
+levels(ins$district)[levels(ins$district)=='Kamrup Metro'] <- 'Kamrup Metropolitan'
+levels(ins$district)[levels(ins$district)=='East Nimar'] <- 'Khandwa (East Nimar)'
+levels(ins$district)[levels(ins$district)=='Khargone'] <- 'Khargone (West Nimar)'
+levels(ins$district)[levels(ins$district)=='Korea'] <- 'Koriya'
+levels(ins$district)[levels(ins$district)=='Maharajganj'] <- 'Mahrajganj'
+levels(ins$district)[levels(ins$district)=='Marigaon'] <- 'Morigaon'
+levels(ins$district)[levels(ins$district)=='Narsinghpur'] <- 'Narsimhapur'
+levels(ins$district)[levels(ins$district)=='Nuh'] <- 'Mewat'
+levels(ins$district)[levels(ins$district)=='Pondicherry'] <- 'Puducherry'
+levels(ins$district)[levels(ins$district)=='Prayagraj'] <- 'Allahabad'
+levels(ins$district)[levels(ins$district)=='Ri Bhoi'] <- 'Ribhoi'
+levels(ins$district)[levels(ins$district)=='Shravasti'] <- 'Shrawasti'
+levels(ins$district)[levels(ins$district)=='Namchi'] <- 'South District'
+levels(ins$district)[levels(ins$district)=='Nellore'] <- 'Spsr Nellore'
+levels(ins$district)[levels(ins$district)=='Sonepur'] <- 'Subarnapur'
+levels(ins$district)[levels(ins$district)=='Thanjavur I'] <- 'Thanjavur'
+levels(ins$district)[levels(ins$district)=='Thanjavur II'] <- 'Thanjavur'
+levels(ins$district)[levels(ins$district)=='Thiruvarur II'] <- 'Thiruvarur'
+levels(ins$district)[levels(ins$district)=='Visakhapatanam'] <- 'Visakhapatnam'
+levels(ins$district)[levels(ins$district)=='Warangal Rural'] <- 'Warangal'
+levels(ins$district)[levels(ins$district)=='Warangal Urban'] <- 'Warangal'
 
 levels(rain$district)[levels(rain$district)=='Agar-Malwa'] <- 'Agar Malwa'
 levels(rain$district)[levels(rain$district)=='Ahmednagar'] <- 'Ahmadnagar'
@@ -148,61 +186,97 @@ levels(rain$district)[levels(rain$district)=='Deogarh'] <- 'Debagarh'
 levels(rain$district)[levels(rain$district)=='Dholpur'] <- 'Dhaulpur'
 levels(rain$district)[levels(rain$district)=='N. C. Hills'] <- 'Dima Hasao'
 levels(rain$district)[levels(rain$district)=='East Sikkim'] <- 'East District'
-levels(rain$district)[levels(rain$district)=='Khandwa'] <- 'East Nimar'
 levels(rain$district)[levels(rain$district)=='Garhwal Pauri'] <- 'Garhwal'
 levels(rain$district)[levels(rain$district)=='West Sikkim'] <- 'West District'
-levels(rain$district)[levels(rain$district)=='West Sikkim'] <- 'West District'
-
-levels(rain$district)[levels(rain$district)=='Haridwar'] <- 'Haridwar'
+levels(rain$district)[levels(rain$district)=='Gariaband'] <- 'Gariyaband'
+levels(rain$district)[levels(rain$district)=='Gondia'] <- 'Gondiya'
+levels(rain$district)[levels(rain$district)=='Howrah'] <- 'Haora'
+levels(rain$district)[levels(rain$district)=='Hassan'] <- 'Hasan'
 levels(rain$district)[levels(rain$district)=='Hazaribag'] <- 'Hazaribagh'
+levels(rain$district)[levels(rain$district)=='Narmadapuram'] <- 'Hoshangabad'
+levels(rain$district)[levels(rain$district)=='Hooghly'] <- 'Hugli'
+levels(rain$district)[levels(rain$district)=='Jagatsinghapur'] <- 'Jagatsinghpur'
+levels(rain$district)[levels(rain$district)=='Jajpur'] <- 'Jajapur'
+levels(rain$district)[levels(rain$district)=='Jalore'] <- 'Jalor'
 levels(rain$district)[levels(rain$district)=='Janjgir'] <- 'Janjgir-Champa'
-levels(rain$district)[levels(rain$district)=='J. Bhupalpally'] <- 'Jayashankar Bhupalpally'
-levels(rain$district)[levels(rain$district)=='Kamrup Metro'] <- 'Kamrup (Metro)'
+levels(rain$district)[levels(rain$district)=='J. Bhupalpally'] <- 'Jayashankar'
+levels(rain$district)[levels(rain$district)=='Jogulamba Gadwal'] <- 'Jogulamba'
+levels(rain$district)[levels(rain$district)=='Kabirdham'] <- 'Kabeerdham'
+levels(rain$district)[levels(rain$district)=='Kalaburgi'] <- 'Kalaburagi'
+levels(rain$district)[levels(rain$district)=='Kamrup (Rural)'] <- 'Kamrup'
+levels(rain$district)[levels(rain$district)=='Kamrup Metro'] <- 'Kamrup Metropolitan'
+levels(rain$district)[levels(rain$district)=='Kanyakumari'] <- 'Kanniyakumari'
 levels(rain$district)[levels(rain$district)=='Cannur'] <- 'Kannur'
+levels(rain$district)[levels(rain$district)=='Kanpur City'] <- 'Kanpur Nagar'
 levels(rain$district)[levels(rain$district)=='Kasargod'] <- 'Kasaragod'
-levels(rain$district)[levels(rain$district)=='Keonjhargarh'] <- 'Kendujhar'
+levels(rain$district)[levels(rain$district)=='Keonjhargarh'] <- 'Keonjhar'
+levels(rain$district)[levels(rain$district)=='Khandwa'] <- 'Khandwa (East Nimar)'
+levels(rain$district)[levels(rain$district)=='Khargone'] <- 'Khargone (West Nimar)'
+levels(rain$district)[levels(rain$district)=='Keonjhargarh'] <- 'Keonjhar'
 levels(rain$district)[levels(rain$district)=='Kistwar'] <- 'Kishtwar'
+levels(rain$district)[levels(rain$district)=='Koderma'] <- 'Kodarma'
+levels(rain$district)[levels(rain$district)=='Kumaram Bheem'] <- 'Komaram Bheem'
 levels(rain$district)[levels(rain$district)=='Korea'] <- 'Koriya'
+levels(rain$district)[levels(rain$district)=='Kushi Nagar'] <- 'Kushinagar'
+levels(rain$district)[levels(rain$district)=='Maharajganj'] <- 'Mahrajganj'
 levels(rain$district)[levels(rain$district)=='M. Malkajgiri'] <- 'Medchal-Malkajgiri'
-levels(rain$district)[levels(rain$district)=='Nawarangpur'] <- 'Nabarangpur'
-levels(rain$district)[levels(rain$district)=='South Sikkim'] <- 'Namchi'
-levels(rain$district)[levels(rain$district)=='North 24 Parganas'] <- 'North Twenty Four Parganas'
-levels(rain$district)[levels(rain$district)=='Mewat'] <- 'Nuh'
+levels(rain$district)[levels(rain$district)=='Nuh'] <- 'Mewat'
+levels(rain$district)[levels(rain$district)=='Nawarangpur'] <- 'Nabarangapur'
+levels(rain$district)[levels(rain$district)=='Narsinghpur'] <- 'Narsimhapur'
+levels(rain$district)[levels(rain$district)=='Nicobar'] <- 'Nicobars'
+levels(rain$district)[levels(rain$district)=='North 24 Parganas'] <- 'North 24 Paraganas'
+levels(rain$district)[levels(rain$district)=='North Sikkim'] <- 'North District'
+levels(rain$district)[levels(rain$district)=='Dharashiv'] <- 'Osmanabad'
+levels(rain$district)[levels(rain$district)=='West Midnapore'] <- 'Paschim Medinipur'
+levels(rain$district)[levels(rain$district)=='West Singbhum'] <- 'Pashchimi Singhbhum'
+levels(rain$district)[levels(rain$district)=='East Midnapore'] <- 'Purba Medinipur'
+levels(rain$district)[levels(rain$district)=='East Singbhum'] <- 'Purbi Singhbhum'
 levels(rain$district)[levels(rain$district)=='Peddapalle'] <- 'Peddapalli'
-levels(rain$district)[levels(rain$district)=='Rae Bareilly'] <- 'Raebareli'
-levels(rain$district)[levels(rain$district)=='Ri-Bhoi'] <- 'Ri Bhoi'
-levels(rain$district)[levels(rain$district)=='Seraikela-Kharsawan'] <- 'Seraikela-Kharsawan'
-levels(rain$district)[levels(rain$district)=='Shrawasti Nagar'] <- 'Shravasti'
+levels(rain$district)[levels(rain$district)=='Poonch'] <- 'Punch'
+levels(rain$district)[levels(rain$district)=='Purulia'] <- 'Puruliya'
+levels(rain$district)[levels(rain$district)=='Rae Bareilly'] <- 'Rae Bareli'
+levels(rain$district)[levels(rain$district)=='Rajanna Sircilla'] <- 'Rajanna'
+levels(rain$district)[levels(rain$district)=='Rangareddy'] <- 'Ranga Reddy'
+levels(rain$district)[levels(rain$district)=='Ri-Bhoi'] <- 'Ribhoi'
+levels(rain$district)[levels(rain$district)=='Seraikela-Kharsawan'] <- 'Saraikela-Kharsawan'
+levels(rain$district)[levels(rain$district)=='Shrawasti Nagar'] <- 'Shrawasti'
 levels(rain$district)[levels(rain$district)=='Siddharth Nagar'] <- 'Siddharthnagar'
 levels(rain$district)[levels(rain$district)=='Sibsagar'] <- 'Sivasagar'
+levels(rain$district)[levels(rain$district)=='Sholapur'] <- 'Solapur'
 levels(rain$district)[levels(rain$district)=='Sonepat'] <- 'Sonipat'
-levels(rain$district)[levels(rain$district)=='South 24 Parganas'] <- 'South Twenty Four Parganas'
-levels(rain$district)[levels(rain$district)=='Spsr Nellore'] <- 'Sri Potti Sriramulu Nellore'
+levels(rain$district)[levels(rain$district)=='Namchi'] <- 'South District'
 levels(rain$district)[levels(rain$district)=='Sonepur'] <- 'Subarnapur'
+levels(rain$district)[levels(rain$district)=='Garhwal Tehri'] <- 'Tehri Garhwal'
 levels(rain$district)[levels(rain$district)=='Thenkasi'] <- 'Tenkasi'
+levels(rain$district)[levels(rain$district)=='Nilgiris'] <- 'The Nilgiris'
+levels(rain$district)[levels(rain$district)=='Tiruvallur'] <- 'Thiruvallur'
+levels(rain$district)[levels(rain$district)=='Tiruvarur'] <- 'Thiruvarur'
+levels(rain$district)[levels(rain$district)=='Toothukudi'] <- 'Thoothukkudi'
+levels(rain$district)[levels(rain$district)=='Trichy'] <- 'Tiruchirappalli'
 levels(rain$district)[levels(rain$district)=='Tirupattur'] <- 'Tirupathur'
+levels(rain$district)[levels(rain$district)=='Kanker'] <- 'Uttar Bastar Kanker'
 levels(rain$district)[levels(rain$district)=='North Dinajpur'] <- 'Uttar Dinajpur'
 levels(rain$district)[levels(rain$district)=='Villupuram'] <- 'Viluppuram'
-levels(rain$district)[levels(rain$district)=='Vishakhapatnam'] <- 'Visakhapatanam'
+levels(rain$district)[levels(rain$district)=='Vishakhapatnam'] <- 'Visakhapatnam'
 levels(rain$district)[levels(rain$district)=='Wynad'] <- 'Wayanad'
 levels(rain$district)[levels(rain$district)=='Ysr District'] <- 'Y.S.R.'
 levels(rain$district)[levels(rain$district)=='Yadgir'] <- 'Yadgiri'
 levels(rain$district)[levels(rain$district)=='Yamuna Nagar'] <- 'Yamunanagar'
 levels(rain$district)[levels(rain$district)=='Yeotmal'] <- 'Yavatmal'
-levels(rain$district)[levels(rain$district)=='Anantapuramu'] <- 'Anantapur'
-levels(rain$district)[levels(rain$district)=='Hardwar'] <- 'Hardiwar'
-levels(rain$district)[levels(rain$district)=='Kanpur City'] <- 'Kanpur Nagar'
-levels(rain$district)[levels(rain$district)=='West Midnapore'] <- 'Paschim Medinipur'
-levels(rain$district)[levels(rain$district)=='West Singbhum'] <- 'Paschim Singhbhum'
-levels(rain$district)[levels(rain$district)=='East Midnapore'] <- 'Purba Medinipur'
-levels(rain$district)[levels(rain$district)=='East Singbhum'] <- 'Purbi Singhbhum'
-levels(rain$district)[levels(rain$district)=='Sholapur'] <- 'Solapur'
-levels(rain$district)[levels(rain$district)=='Garhwal Tehri'] <- 'Tehri Garhwal'
-levels(rain$district)[levels(rain$district)=='Trichy'] <- 'Tiruchirappalli '
+
+# 643 districts in common
+
 # Rename prod states to ins states
 
 # Rename prod districts to ins districts
 
+# Create ins/rain/prod dataframe
+test <-merge(ins, rain, by=c("district", "state", "year"))
+test <- inner_join(test, prod1997, by = c("district" = "district", "state" = "state", "year" = "year"))
+test$f.it <- test$area.ins/test$area
+
+test.glm <- glm(log(prod) ~ jul.ptdef + aug.ptdef + I(jul.ptdef**2) + I(aug.ptdef**2)
+                + jul.ptdef*f.it + aug.ptdef*f.it + I(jul.ptdef**2)*f.it + I(aug.ptdef**2)*f.it + factor(year) + factor(district), data = test)
 
 # Create climate/ins 2018 dataframe
 climate_data_noNA <- na.omit(climate_data) # Omit all climate NAs
