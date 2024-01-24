@@ -379,9 +379,13 @@ ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
 total$f.it <- total$area.ins/total$area
 
-dev.glm <- glm(log(prod) ~ jul.ptdef + aug.ptdef + I(jul.ptdef**2) + I(aug.ptdef**2)
-                + jul.ptdef*f.it + aug.ptdef*f.it + I(jul.ptdef**2)*f.it + I(aug.ptdef**2)*f.it 
+rf.glm <- glm(log(prod) ~ may.ptdef + jun.ptdef + jul.ptdef + aug.ptdef + I(may.ptdef**2) 
+               + I(jun.ptdef**2) + I(jul.ptdef**2) + I(aug.ptdef**2)
                 + factor(year) + factor(district), data = total)
+
+# Rainfall categories 
+
+rain_type <- as.factor(ifelse(total$jan.ptdef == -1, 'No Rain', 'Other'))
 
 # Create climate/ins 2018 dataframe
 climate_data_noNA <- na.omit(climate_data) # Omit all climate NAs
