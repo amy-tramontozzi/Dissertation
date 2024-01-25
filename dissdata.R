@@ -7,6 +7,7 @@ library(readxl)
 library(stringr)
 library(dplyr)
 library(stringdist)
+library(expss)
 
 # Load and tidy prod data 
 ## Summing area, prod, and yield across crops
@@ -377,15 +378,104 @@ levels(prod1997$district)[levels(prod1997$district)=='Yadgir'] <- 'Yadgiri'
 # Create ins/rain/prod dataframe
 ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
-total$f.it <- total$area.ins/total$area
+total <- total %>%
+  group_by(district) %>%
+  mutate(area_max = max(area)) %>%
+  ungroup()
 
-rf.glm <- glm(log(prod) ~ may.ptdef + jun.ptdef + jul.ptdef + aug.ptdef + I(may.ptdef**2) 
-               + I(jun.ptdef**2) + I(jul.ptdef**2) + I(aug.ptdef**2)
-                + factor(year) + factor(district), data = total)
+total$f.it <- total$area.ins/(total$area_max/1000)
+total$f.it[total$f.it > 1] <- 1.00 # only if no other solution
+
+# Create variable labels
+total = apply_labels(total,
+                    district = "District name",
+                    state = "State name",
+                    year = "Year from 2018-2022",
+                    ins.units = "Insurance units (Village/Village Panchayat 
+                    level for major crops and a size above the level of 
+                    Village/Village Panchayat for other crops)",
+                    farmers = "Individual insured farmers",
+                    loanee = "Loanee applications",
+                    nonloanee = "Non-loanee applications",
+                    area.ins = "Area (thousand hect.) insured",
+                    farmers.premium = "Farmers' premium in Lac.",
+                    state.premium = "State premium in lac.",
+                    goi.premium = "Government of India premium in lac.",
+                    gross.premium = "Total premium in lac.",
+                    sum.insured = "Sum insured in lac.",
+                    male.pt = "% male",
+                    female.pt = "% female",
+                    othergen.pt = "% other gender",
+                    sc.pt = "% scheduled caste",
+                    st.pt = "% scheduled tribe",
+                    obc.pt = "% other backward class",
+                    gen.pt = "% forward/general class",
+                    marginal.pt = "% marginal (below 1.00 hectare) farmers",
+                    small.pt = "% small (1.00-2.00 hectares) farmers",
+                    othertype.pt = "% other size farmers",
+                    jan.rf = "January rainfall (in mm)",
+                    jan.ptdef = "% departures of observed rainfall from January district 
+                    normals",
+                    feb.rf = "Februraru rainfall (in mm)",
+                    feb.ptdef = "% departures of observed rainfall from February district 
+                    normals",
+                    mar.rf = "March rainfall (in mm)",
+                    mar.ptdef = "% departures of observed rainfall from March district 
+                    normals",
+                    apr.rf = "April rainfall (in mm)",
+                    apr.ptdef = "% departures of observed rainfall from April district 
+                    normals",
+                    may.rf = "May rainfall (in mm)",
+                    may.ptdef = "% departures of observed rainfall from May district 
+                    normals",
+                    jun.rf = "June rainfall (in mm)",
+                    jun.ptdef = "% departures of observed rainfall from June district 
+                    normals",
+                    jul.rf = "July rainfall (in mm)",
+                    jul.ptdef = "% departures of observed rainfall from July district 
+                    normals",
+                    aug.rf = "August rainfall (in mm)",
+                    aug.ptdef = "% departures of observed rainfall from August district 
+                    normals",
+                    sep.rf = "September rainfall (in mm)",
+                    sep.ptdef = "% departures of observed rainfall from September district 
+                    normals",
+                    oct.rf = "October rainfall (in mm)",
+                    oct.ptdef = "% departures of observed rainfall from October district 
+                    normals",
+                    nov.rf = "November rainfall (in mm)",
+                    nov.ptdef = "% departures of observed rainfall from November district 
+                    normals",
+                    dec.rf = "December rainfall (in mm)",
+                    dec.ptdef = "% departures of observed rainfall from December district 
+                    normals",
+                    area = "Production Area (Hect.)",
+                    prod = "Production (Tonne)",
+                    yield = "Yield (Tonne/Hectare)",
+                    f.it = "Fraction insured (Thousand Hect./Thousand Hect."
+)
+# without any interactions effects or temperature
+rf.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) + factor(aug.rain_type)
+              + factor(year) + factor(district), data = total)
 
 # Rainfall categories 
 
-rain_type <- as.factor(ifelse(total$jan.ptdef == -1, 'No Rain', 'Other'))
+total$jun.rain_type <- as.factor(ifelse(total$jun.ptdef == -1, 'No Rain',
+                                 ifelse(total$jun.ptdef >= 0.20, 'Excess',
+                                 ifelse(total$jun.ptdef >= -.19 & total$jun.ptdef <= .19, 'Normal',
+                                 ifelse(total$jun.ptdef <= -.20, 'Deficient', 'Other')))))
+total$jul.rain_type <- as.factor(ifelse(total$jul.ptdef == -1, 'No Rain',
+                                 ifelse(total$jul.ptdef >= 0.20, 'Excess',
+                                 ifelse(total$jul.ptdef >= -.19 & total$jul.ptdef <= .19, 'Normal',
+                                 ifelse(total$jul.ptdef <= -.20, 'Deficient', 'Other')))))
+total$aug.rain_type <- as.factor(ifelse(total$aug.ptdef == -1, 'No Rain',
+                                 ifelse(total$aug.ptdef >= 0.20, 'Excess',
+                                 ifelse(total$aug.ptdef >= -.19 & total$aug.ptdef <= .19, 'Normal',
+                                 ifelse(total$aug.ptdef <= -.20, 'Deficient', 'Other')))))
+total$sep.rain_type <- as.factor(ifelse(total$sep.ptdef == -1, 'No Rain',
+                                 ifelse(total$sep.ptdef >= 0.20, 'Excess',
+                                 ifelse(total$sep.ptdef >= -.19 & total$sep.ptdef <= .19, 'Normal',
+                                 ifelse(total$sep.ptdef <= -.20, 'Deficient', 'Other')))))
 
 # Create climate/ins 2018 dataframe
 climate_data_noNA <- na.omit(climate_data) # Omit all climate NAs
