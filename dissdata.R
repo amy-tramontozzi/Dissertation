@@ -71,6 +71,25 @@ climate_data$station <- str_to_title(climate_data$station)
 climate_data$station <- as.factor(climate_data$station)
 climate_data$stationID <- as.factor(climate_data$stationID)
 
+# Load and tidy ICRISAT data
+icrisat <- read_csv("ICRISAT-District Level Data.csv")
+names(icrisat)[names(icrisat) == "Dist Name"] <- "district"
+names(icrisat)[names(icrisat) == "State Name"] <- "state"
+names(icrisat)[names(icrisat) == "Year"] <- "year"
+icrisat[, 6:80][icrisat[, 6:80] == -1.00] <- 0
+icr_area <- select(icrisat, contains("AREA"))
+icrisat$icr2017_area <- rowSums(icr_area) 
+icr_prod <- select(icrisat, contains("PRODUCTION"))
+icrisat$icr2017_prod <- rowSums(icr_prod)
+icr_yield <- select(icrisat, contains("YIELD"))
+icrisat$icr2017_yield <- rowSums(icr_yield)
+icrisat <- icrisat[,-6:-80]
+
+icrisat$state <- as.factor(icrisat$state)
+icrisat$district <- as.factor(icrisat$district)
+
+icrmissing.dis <- levels(total$district)[!(levels(total$district) %in% levels(icrisat$district))]
+
 ### RENAMING STATIONS TO DISTRICTS
 stat_dis <- read_excel("station_district.xlsx")
 stat_dis$station <- str_to_title(stat_dis$station)
@@ -374,89 +393,37 @@ levels(prod1997$district)[levels(prod1997$district)=='Visakhapatanam'] <- 'Visak
 levels(prod1997$district)[levels(prod1997$district)=='Kadapa'] <- 'Y.S.R.'
 levels(prod1997$district)[levels(prod1997$district)=='Yadgir'] <- 'Yadgiri'
 
+# Rename ICRISAT states
+
+# Rename ICRISAT districts
+total <- total %>%
+  group_by(district) %>%
+  mutate(area_max_4 = max(area)) %>%
+  ungroup()
+
+prod1997 <- prod1997 %>%
+  group_by(district) %>%
+  mutate(area_max97 = max(area)) %>%
+  ungroup()
 
 # Create ins/rain/prod dataframe
 ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
-total <- total %>%
-  group_by(district) %>%
-  mutate(area_max = max(area)) %>%
-  ungroup()
 
-total$f.it <- total$area.ins/(total$area_max/1000)
-total$f.it[total$f.it > 1] <- 1.00 # only if no other solution
+# ICRISAT total merge
+trial <- merge(total, icrisat, by=c("district", "state"))
+trial$tf.it <- trial$area.ins/(trial$icr2017_area)
 
-# Create variable labels
-total = apply_labels(total,
-                    district = "District name",
-                    state = "State name",
-                    year = "Year from 2018-2022",
-                    ins.units = "Insurance units (Village/Village Panchayat 
-                    level for major crops and a size above the level of 
-                    Village/Village Panchayat for other crops)",
-                    farmers = "Individual insured farmers",
-                    loanee = "Loanee applications",
-                    nonloanee = "Non-loanee applications",
-                    area.ins = "Area (thousand hect.) insured",
-                    farmers.premium = "Farmers' premium in Lac.",
-                    state.premium = "State premium in lac.",
-                    goi.premium = "Government of India premium in lac.",
-                    gross.premium = "Total premium in lac.",
-                    sum.insured = "Sum insured in lac.",
-                    male.pt = "% male",
-                    female.pt = "% female",
-                    othergen.pt = "% other gender",
-                    sc.pt = "% scheduled caste",
-                    st.pt = "% scheduled tribe",
-                    obc.pt = "% other backward class",
-                    gen.pt = "% forward/general class",
-                    marginal.pt = "% marginal (below 1.00 hectare) farmers",
-                    small.pt = "% small (1.00-2.00 hectares) farmers",
-                    othertype.pt = "% other size farmers",
-                    jan.rf = "January rainfall (in mm)",
-                    jan.ptdef = "% departures of observed rainfall from January district 
-                    normals",
-                    feb.rf = "Februraru rainfall (in mm)",
-                    feb.ptdef = "% departures of observed rainfall from February district 
-                    normals",
-                    mar.rf = "March rainfall (in mm)",
-                    mar.ptdef = "% departures of observed rainfall from March district 
-                    normals",
-                    apr.rf = "April rainfall (in mm)",
-                    apr.ptdef = "% departures of observed rainfall from April district 
-                    normals",
-                    may.rf = "May rainfall (in mm)",
-                    may.ptdef = "% departures of observed rainfall from May district 
-                    normals",
-                    jun.rf = "June rainfall (in mm)",
-                    jun.ptdef = "% departures of observed rainfall from June district 
-                    normals",
-                    jul.rf = "July rainfall (in mm)",
-                    jul.ptdef = "% departures of observed rainfall from July district 
-                    normals",
-                    aug.rf = "August rainfall (in mm)",
-                    aug.ptdef = "% departures of observed rainfall from August district 
-                    normals",
-                    sep.rf = "September rainfall (in mm)",
-                    sep.ptdef = "% departures of observed rainfall from September district 
-                    normals",
-                    oct.rf = "October rainfall (in mm)",
-                    oct.ptdef = "% departures of observed rainfall from October district 
-                    normals",
-                    nov.rf = "November rainfall (in mm)",
-                    nov.ptdef = "% departures of observed rainfall from November district 
-                    normals",
-                    dec.rf = "December rainfall (in mm)",
-                    dec.ptdef = "% departures of observed rainfall from December district 
-                    normals",
-                    area = "Production Area (Hect.)",
-                    prod = "Production (Tonne)",
-                    yield = "Yield (Tonne/Hectare)",
-                    f.it = "Fraction insured (Thousand Hect./Thousand Hect."
-)
-# without any interactions effects or temperature
-rf.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) + factor(aug.rain_type)
-              + factor(year) + factor(district), data = total)
+total$f.it <- total$area.ins/(total$area_max97/1000)
+#total$f.it[total$f.it > 1] <- 1.00 # only if no other solution
+
+# GLMs
+rfbins.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) + factor(aug.rain_type)
+                              + factor(year) + factor(district), data = total)
+
+rf.glm <- glm(log(prod) ~ jun.rf + jul.rf + aug.rf + I(jun.rf**2) + I(jul.rf**2) + 
+                I(aug.rf**2) + tf.it + I(jun.rf*tf.it) + I(jul.rf*tf.it)
+              + I(aug.rf*tf.it) + factor(year.x) + factor(district), data = trial)
 
 # Rainfall categories 
 
@@ -485,9 +452,79 @@ climate_data2018_agg <- climate_data2018[,-3:-4] # Remove stations and station I
 climate_data2018_agg <- climate_data2018 %>% mutate_if(is.numeric, ~round(., 1)) # Round temps to 1 digit
 climate_ins_2018 <- inner_join(ins, climate_data2018, by=c("district" = "district", "year" = "year")) # Merge ins and 2018 climate
 ## Result is 223 observations for primary regression
-
 # Create climate/ins full dataframe
 climate_data_agg <- aggregate(. ~ district + year, FUN = mean, data=climate_data_noNA) # Aggregate stations to districts
 climate_data_agg <- climate_data_agg[,-3:-4] # Remove stations and station ID
 climate_data_agg <- climate_data_agg %>% mutate_if(is.numeric, ~round(., 1)) # Round temps to 1 digit
 ## Result is 7723 observations for full regression
+
+# Create variable labels
+total = apply_labels(total,
+                     district = "District name",
+                     state = "State name",
+                     year = "Year from 2018-2022",
+                     ins.units = "Insurance units (Village/Village Panchayat 
+                    level for major crops and a size above the level of 
+                    Village/Village Panchayat for other crops)",
+                     farmers = "Individual insured farmers",
+                     loanee = "Loanee applications",
+                     nonloanee = "Non-loanee applications",
+                     area.ins = "Area (thousand hect.) insured",
+                     farmers.premium = "Farmers' premium in Lac.",
+                     state.premium = "State premium in lac.",
+                     goi.premium = "Government of India premium in lac.",
+                     gross.premium = "Total premium in lac.",
+                     sum.insured = "Sum insured in lac.",
+                     male.pt = "% male",
+                     female.pt = "% female",
+                     othergen.pt = "% other gender",
+                     sc.pt = "% scheduled caste",
+                     st.pt = "% scheduled tribe",
+                     obc.pt = "% other backward class",
+                     gen.pt = "% forward/general class",
+                     marginal.pt = "% marginal (below 1.00 hectare) farmers",
+                     small.pt = "% small (1.00-2.00 hectares) farmers",
+                     othertype.pt = "% other size farmers",
+                     jan.rf = "January rainfall (in mm)",
+                     jan.ptdef = "% departures of observed rainfall from January district 
+                    normals",
+                     feb.rf = "Februraru rainfall (in mm)",
+                     feb.ptdef = "% departures of observed rainfall from February district 
+                    normals",
+                     mar.rf = "March rainfall (in mm)",
+                     mar.ptdef = "% departures of observed rainfall from March district 
+                    normals",
+                     apr.rf = "April rainfall (in mm)",
+                     apr.ptdef = "% departures of observed rainfall from April district 
+                    normals",
+                     may.rf = "May rainfall (in mm)",
+                     may.ptdef = "% departures of observed rainfall from May district 
+                    normals",
+                     jun.rf = "June rainfall (in mm)",
+                     jun.ptdef = "% departures of observed rainfall from June district 
+                    normals",
+                     jul.rf = "July rainfall (in mm)",
+                     jul.ptdef = "% departures of observed rainfall from July district 
+                    normals",
+                     aug.rf = "August rainfall (in mm)",
+                     aug.ptdef = "% departures of observed rainfall from August district 
+                    normals",
+                     sep.rf = "September rainfall (in mm)",
+                     sep.ptdef = "% departures of observed rainfall from September district 
+                    normals",
+                     oct.rf = "October rainfall (in mm)",
+                     oct.ptdef = "% departures of observed rainfall from October district 
+                    normals",
+                     nov.rf = "November rainfall (in mm)",
+                     nov.ptdef = "% departures of observed rainfall from November district 
+                    normals",
+                     dec.rf = "December rainfall (in mm)",
+                     dec.ptdef = "% departures of observed rainfall from December district 
+                    normals",
+                     area = "Production Area (Hect.)",
+                     prod = "Production (Tonne)",
+                     yield = "Yield (Tonne/Hectare)",
+                     f.it = "Fraction insured (Thousand Hect./Thousand Hect."
+)
+
+
