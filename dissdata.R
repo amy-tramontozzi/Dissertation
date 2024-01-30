@@ -35,6 +35,8 @@ prod1997$state <- as.factor(prod1997$state)
 prod1997$year <- as.numeric(prod1997$year)
 prod1997$district <- as.factor(prod1997$district)
 
+prod1997$area <- prod1997$area/1000
+
 # Load and tidy insurance data
 ins <- read_excel("districtdata.xlsx")
 ins <- ins[,-24:-41]
@@ -88,7 +90,15 @@ icrisat <- icrisat[,-6:-80]
 icrisat$state <- as.factor(icrisat$state)
 icrisat$district <- as.factor(icrisat$district)
 
-icrmissing.dis <- levels(total$district)[!(levels(total$district) %in% levels(icrisat$district))]
+# Load and tidy ICRISAT seasonal
+icrisat_2015 <- read_excel("icrisat_2015_season.xlsx")
+names(icrisat_2015)[names(icrisat_2015) == "DISTNAME"] <- "district"
+names(icrisat_2015)[names(icrisat_2015) == "STNAME"] <- "state"
+names(icrisat_2015)[names(icrisat_2015) == "YEAR"] <- "year"
+icr15_area <- select(icrisat_2015, contains("KA"))
+icrisat_2015$icr2015_area <- rowSums(icr15_area) 
+icr15_prod <- select(icrisat_2015, contains("KQ"))
+icrisat_2015$icr2015_prod <- rowSums(icr15_prod)
 
 ### RENAMING STATIONS TO DISTRICTS
 stat_dis <- read_excel("station_district.xlsx")
@@ -396,11 +406,15 @@ levels(prod1997$district)[levels(prod1997$district)=='Yadgir'] <- 'Yadgiri'
 # Rename ICRISAT states
 
 # Rename ICRISAT districts
+
+
+# Find the max area by district from 2018-2021. 74 f.it > 1
 total <- total %>%
   group_by(district) %>%
   mutate(area_max_4 = max(area)) %>%
   ungroup()
 
+# Find the max area by district from 2018-2021. 139 f.it > 1
 prod1997 <- prod1997 %>%
   group_by(district) %>%
   mutate(area_max97 = max(area)) %>%
@@ -410,11 +424,25 @@ prod1997 <- prod1997 %>%
 ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
 
-# ICRISAT total merge
+# ICRISAT 2017 total merge
 trial <- merge(total, icrisat, by=c("district", "state"))
 trial$tf.it <- trial$area.ins/(trial$icr2017_area)
 
-total$f.it <- total$area.ins/(total$area_max97/1000)
+## Using this f.it delivers all values lower than zero. However,
+## area us likely overestimated because it is annual, not seasonal.
+
+# ICRISAT 2015 total merge
+icrisat_2015 <- icrisat_2015 %>%
+  filter(year == 2015)
+total_2015 <- merge(total, icrisat_2015, by=c("district", "state"))
+total_2015$f.it15 <- total_2015$area.ins/(total_2015$icr2015_area)
+
+total_2015$icr2015_area[total_2015$f.it15==Inf] <- 0.43
+## Using this f.it15 gives 133 f.it15 > 1 (better to at least use max from 2018-2021).
+## I think primarily, should use the full one.
+
+## Using this is from the original prod1997 area, 159 f.it > 1
+total$f.it <- total$area.ins/(total$area)
 #total$f.it[total$f.it > 1] <- 1.00 # only if no other solution
 
 # GLMs
@@ -424,7 +452,6 @@ rfbins.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) + fa
 rf.glm <- glm(log(prod) ~ jun.rf + jul.rf + aug.rf + I(jun.rf**2) + I(jul.rf**2) + 
                 I(aug.rf**2) + tf.it + I(jun.rf*tf.it) + I(jul.rf*tf.it)
               + I(aug.rf*tf.it) + factor(year.x) + factor(district), data = trial)
-
 # Rainfall categories 
 
 total$jun.rain_type <- as.factor(ifelse(total$jun.ptdef == -1, 'No Rain',
@@ -464,8 +491,8 @@ total = apply_labels(total,
                      state = "State name",
                      year = "Year from 2018-2022",
                      ins.units = "Insurance units (Village/Village Panchayat 
-                    level for major crops and a size above the level of 
-                    Village/Village Panchayat for other crops)",
+                     level for major crops and a size above the level of 
+                     Village/Village Panchayat for other crops)",
                      farmers = "Individual insured farmers",
                      loanee = "Loanee applications",
                      nonloanee = "Non-loanee applications",
@@ -487,13 +514,13 @@ total = apply_labels(total,
                      othertype.pt = "% other size farmers",
                      jan.rf = "January rainfall (in mm)",
                      jan.ptdef = "% departures of observed rainfall from January district 
-                    normals",
+                     normals",
                      feb.rf = "Februraru rainfall (in mm)",
                      feb.ptdef = "% departures of observed rainfall from February district 
-                    normals",
+                     normals",
                      mar.rf = "March rainfall (in mm)",
                      mar.ptdef = "% departures of observed rainfall from March district 
-                    normals",
+                     normals",
                      apr.rf = "April rainfall (in mm)",
                      apr.ptdef = "% departures of observed rainfall from April district 
                     normals",
@@ -521,10 +548,8 @@ total = apply_labels(total,
                      dec.rf = "December rainfall (in mm)",
                      dec.ptdef = "% departures of observed rainfall from December district 
                     normals",
-                     area = "Production Area (Hect.)",
+                     area = "Production Area (Thousand hect.)",
                      prod = "Production (Tonne)",
                      yield = "Yield (Tonne/Hectare)",
                      f.it = "Fraction insured (Thousand Hect./Thousand Hect."
 )
-
-
