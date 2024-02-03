@@ -55,6 +55,11 @@ ins$district <- sub("&", "and", ins$district)
 ins$state <- as.factor(ins$state)
 ins$district <- as.factor(ins$district)
 
+
+ins <- ins %>%
+  group_by(district, state, year) %>%
+  summarise(across(everything(), sum))
+
 # Load and tidy CRIS rainfall data
 rain <- read_excel("indian_rain_data.xlsx")
 names(rain)[names(rain) == "fed.ptdef"] <- "feb.ptdef"
@@ -90,6 +95,16 @@ icrisat <- icrisat[,-1:-3]
 
 icrisat$state <- as.factor(icrisat$state)
 icrisat$district <- as.factor(icrisat$district)
+
+# Load and tidy irrigation data
+irrigation <- read_csv("irrigation.csv")
+names(irrigation)[names(irrigation) == "Dist Name"] <- "district"
+names(irrigation)[names(irrigation) == "State Name"] <- "state"
+irrigation[, 6:25][irrigation[, 6:25] == -1.00] <- NA
+total_irr_area <- irrigation[,6:25]
+irrigation$irr_area <- rowSums(total_irr_area, na.rm = TRUE)
+irrigation <- irrigation[,-6:-25]
+irrigation <- irrigation[,-1:-3]
 
 # Load and tidy ICRISAT seasonal
 icrisat_2015 <- read_excel("icrisat_2015_season.xlsx")
@@ -543,8 +558,8 @@ ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
 
 # The below code is used to write a CSV for the dataset with the matched names in ICRISAT
-#total <- merge(total, icrisat, by=c("district", "state"))
-#total$f.it <- total$area.ins/(total$icr2017_area)
+total <- merge(total, icrisat, by=c("district", "state"))
+total$f.it <- total$area.ins/(total$icr2017_area)
 
 # The code below is to replace NAs with . for STATA
 total[, 4:54][is.na(total[, 4:54])] <- '.'
@@ -552,9 +567,6 @@ total[, 4:54][is.na(total[, 4:54])] <- '.'
 full <- merge(total, icrisat, by=c("district", "state"))
 full$f.it <- full$area.ins/(full$icr2017_area)
 
-total <- total %>%
-  group_by(district, year) %>%
-  summarise(across(everything(), sum))
 ## Using this f.it delivers all values lower than zero. However,
 ## area us likely overestimated because it is annual, not seasonal.
 
