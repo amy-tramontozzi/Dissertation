@@ -12,13 +12,13 @@ library(expss)
 # Load and tidy prod data 
 ## Summing area, prod, and yield across crops
 prod1997 <- read_excel("prod1997.xls", guess_max = 20000)
-prod1997[is.na(prod1997)] <- 0
+#prod1997[is.na(prod1997)] <- 0
 area <- select(prod1997, contains("Area"))
-prod1997$area <- rowSums(area) 
+prod1997$area <- rowSums(area, na.rm = TRUE)
 prod <- select(prod1997, contains("Production"))
-prod1997$prod <- rowSums(prod)
+prod1997$prod <- rowSums(prod, na.rm = TRUE)
 yield <- select(prod1997, contains("Yield"))
-prod1997$yield <- rowSums(yield)
+prod1997$yield <- rowSums(yield, na.rm = TRUE)
 # Only select total values
 prod1997 <- prod1997[,-4:-240]
 
@@ -78,14 +78,15 @@ icrisat <- read_csv("ICRISAT-District Level Data.csv")
 names(icrisat)[names(icrisat) == "Dist Name"] <- "district"
 names(icrisat)[names(icrisat) == "State Name"] <- "state"
 names(icrisat)[names(icrisat) == "Year"] <- "year"
-icrisat[, 6:80][icrisat[, 6:80] == -1.00] <- 0
+icrisat[, 6:80][icrisat[, 6:80] == -1.00] <- NA
 icr_area <- select(icrisat, contains("AREA"))
-icrisat$icr2017_area <- rowSums(icr_area) 
+icrisat$icr2017_area <- rowSums(icr_area, na.rm = TRUE) 
 icr_prod <- select(icrisat, contains("PRODUCTION"))
-icrisat$icr2017_prod <- rowSums(icr_prod)
+icrisat$icr2017_prod <- rowSums(icr_prod, na.rm = TRUE)
 icr_yield <- select(icrisat, contains("YIELD"))
-icrisat$icr2017_yield <- rowSums(icr_yield)
+icrisat$icr2017_yield <- rowSums(icr_yield, na.rm = TRUE)
 icrisat <- icrisat[,-6:-80]
+icrisat <- icrisat[,-1:-3]
 
 icrisat$state <- as.factor(icrisat$state)
 icrisat$district <- as.factor(icrisat$district)
@@ -541,10 +542,19 @@ prod1997 <- prod1997 %>%
 ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
 
+# The below code is used to write a CSV for the dataset with the matched names in ICRISAT
+#total <- merge(total, icrisat, by=c("district", "state"))
+#total$f.it <- total$area.ins/(total$icr2017_area)
+
+# The code below is to replace NAs with . for STATA
+total[, 4:54][is.na(total[, 4:54])] <- '.'
 # ICRISAT 2017 total merge
 full <- merge(total, icrisat, by=c("district", "state"))
 full$f.it <- full$area.ins/(full$icr2017_area)
 
+total <- total %>%
+  group_by(district, year) %>%
+  summarise(across(everything(), sum))
 ## Using this f.it delivers all values lower than zero. However,
 ## area us likely overestimated because it is annual, not seasonal.
 
@@ -563,22 +573,22 @@ total$f.it <- total$area.ins/(total$area)
 #total$f.it[total$f.it > 1] <- 1.00 # only if no other solution
 
 # GLMs
-rfbins.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) + factor(aug.rain_type)
-                              + factor(year) + factor(district), data = total)
+rfbins.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) +  
+                    f.it + I(jun.rf*f.it) + I(jul.rf*f.it) + factor(year.x) 
+                  + factor(district), data = full)
 
 rf.glm <- glm(log(prod) ~ jun.rf + jul.rf + I(jun.rf**2) + I(jul.rf**2) +
-                f.it + I(jun.rf*f.it) + I(jul.rf*f.it) + I(jun.rf**2*f.it) +
-                I(jul.rf**2*f.it) + factor(year.x) + factor(district), data = full)
+                f.it + I(jun.rf*f.it) + I(jul.rf*f.it) + factor(year.x) + factor(district), data = full)
 # Rainfall categories 
 
-total$jun.rain_type <- as.factor(ifelse(total$jun.ptdef == -1, 'No Rain',
-                                 ifelse(total$jun.ptdef >= 0.20, 'Excess',
-                                 ifelse(total$jun.ptdef >= -.19 & total$jun.ptdef <= .19, 'Normal',
-                                 ifelse(total$jun.ptdef <= -.20, 'Deficient', 'Other')))))
-total$jul.rain_type <- as.factor(ifelse(total$jul.ptdef == -1, 'No Rain',
-                                 ifelse(total$jul.ptdef >= 0.20, 'Excess',
-                                 ifelse(total$jul.ptdef >= -.19 & total$jul.ptdef <= .19, 'Normal',
-                                 ifelse(total$jul.ptdef <= -.20, 'Deficient', 'Other')))))
+full$jun.rain_type <- as.factor(ifelse(full$jun.ptdef == -1, 'No Rain',
+                                 ifelse(full$jun.ptdef >= 0.20, 'Excess',
+                                 ifelse(full$jun.ptdef >= -.19 & full$jun.ptdef <= .19, 'Normal',
+                                 ifelse(full$jun.ptdef <= -.20, 'Deficient', 'Other')))))
+full$jul.rain_type <- as.factor(ifelse(full$jul.ptdef == -1, 'No Rain',
+                                 ifelse(full$jul.ptdef >= 0.20, 'Excess',
+                                 ifelse(full$jul.ptdef >= -.19 & full$jul.ptdef <= .19, 'Normal',
+                                 ifelse(full$jul.ptdef <= -.20, 'Deficient', 'Other')))))
 total$aug.rain_type <- as.factor(ifelse(total$aug.ptdef == -1, 'No Rain',
                                  ifelse(total$aug.ptdef >= 0.20, 'Excess',
                                  ifelse(total$aug.ptdef >= -.19 & total$aug.ptdef <= .19, 'Normal',
