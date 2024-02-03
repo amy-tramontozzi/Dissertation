@@ -436,7 +436,6 @@ levels(icrisat$district)[levels(icrisat$district)=='Devghar Deogarh'] <- 'Deogha
 levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Dhaulpur'
 levels(icrisat$district)[levels(icrisat$district)=='North Cachar Hil'] <- 'Dima Hasao'
 levels(icrisat$district)[levels(icrisat$district)=='Dindigul Anna'] <- 'Dindigul'
-levels(icrisat$district)[levels(icrisat$district)=='Bangalore(Urban)'] <- 'East Khasi Hills'
 levels(icrisat$district)[levels(icrisat$district)=='Khandwa'] <- 'Khandwa (East Nimar)'
 levels(icrisat$district)[levels(icrisat$district)=='Eranakulam'] <- 'Ernakulam'
 levels(icrisat$district)[levels(icrisat$district)=='Gariaband'] <- 'Gariyaband'
@@ -456,45 +455,74 @@ levels(icrisat$district)[levels(icrisat$district)=='ayashankar Bhuppaly'] <- 'Ja
 levels(icrisat$district)[levels(icrisat$district)=='Jogulamba Gadwal'] <- 'Jogulamba'
 levels(icrisat$district)[levels(icrisat$district)=='Kawardha'] <- 'Kabeerdham'
 levels(icrisat$district)[levels(icrisat$district)=='Gulbarga'] <- 'Kalaburagi'
-
-
-
-
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kallakurichi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kamrup Metropolitan'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kancheepuram'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kandhamal'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Uttar Bastar Kanker'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kanniyakumari'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Karaikal'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Karauli'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kasganj'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kathua'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kaushambi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Khargone (West Nimar)'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Khordha'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Khowai'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kishtwar'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kodarma'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Komaram Bheem'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-levels(icrisat$district)[levels(icrisat$district)=='Dholpur'] <- 'Kalaburagi'
-
+levels(icrisat$district)[levels(icrisat$district)=='Kamrup(Metro)'] <- 'Kamrup Metropolitan'
+levels(icrisat$district)[levels(icrisat$district)=='Phulbani(Kandhamal)'] <- 'Kandhamal'
+levels(icrisat$district)[levels(icrisat$district)=='Kanker'] <- 'Uttar Bastar Kanker'
+levels(icrisat$district)[levels(icrisat$district)=='Kanyakumari'] <- 'Kanniyakumari'
+levels(icrisat$district)[levels(icrisat$district)=='Karoli'] <- 'Karauli'
+levels(icrisat$district)[levels(icrisat$district)=='Kasganj Khansi Ram Nagar'] <- 'Kasganj'
+levels(icrisat$district)[levels(icrisat$district)=='Khargone'] <- 'Khargone (West Nimar)'
+levels(icrisat$district)[levels(icrisat$district)=='Khurda'] <- 'Khordha'
+levels(icrisat$district)[levels(icrisat$district)=='Khodrama Koderma'] <- 'Kodarma'
+levels(icrisat$district)[levels(icrisat$district)=='Kumurambheem Asifabad'] <- 'Komaram Bheem'
+levels(icrisat$district)[levels(icrisat$district)=='Kushi Nagar Padrauna'] <- 'Kushinagar'
+levels(icrisat$district)[levels(icrisat$district)=='Lohardagga'] <- 'Lohardaga'
+levels(icrisat$district)[levels(icrisat$district)=='Mahrajgani'] <- 'Mahrajganj'
+levels(icrisat$district)[levels(icrisat$district)=='Mahasmund'] <- 'Mahasamund'
+levels(icrisat$district)[levels(icrisat$district)=='Mahabubnagar'] <- 'Mahbubnagar'
+levels(icrisat$district)[levels(icrisat$district)=='Marigaon'] <- 'Morigaon'
+levels(icrisat$district)[levels(icrisat$district)=='Mayurbhanja'] <- 'Mayurbhanj'
+levels(icrisat$district)[levels(icrisat$district)=='Malkangiri'] <- 'Medchal-Malkajgiri'
+levels(icrisat$district)[levels(icrisat$district)=='Mirzpur'] <- 'Mirzapur'
+levels(icrisat$district)[levels(icrisat$district)=='Mungli'] <- 'Mungeli'
+levels(icrisat$district)[levels(icrisat$district)=='Mysore'] <- 'Mysuru'
+levels(icrisat$district)[levels(icrisat$district)=='Nawarangpur'] <- 'Nabarangapur'
+levels(icrisat$district)[levels(icrisat$district)=='Narsinghpur'] <- 'Narsimhapur'
+levels(icrisat$district)[levels(icrisat$district)=='Nasik'] <- 'Nashik'
+levels(icrisat$district)[levels(icrisat$district)=='24 - Paraganas North'] <- 'North 24 Paraganas'
+levels(icrisat$district)[levels(icrisat$district)=='Palamau'] <- 'Palamu'
+levels(icrisat$district)[levels(icrisat$district)=='West Midnapore'] <- 'Paschim Medinipur'
+levels(icrisat$district)[levels(icrisat$district)=='Singhbhum West'] <- 'Paschimi Singhbhum'
+levels(icrisat$district)[levels(icrisat$district)=='Peddapally'] <- 'Peddapalli'
+levels(icrisat$district)[levels(icrisat$district)=='Perambular'] <- 'Perambalur'
+levels(icrisat$district)[levels(icrisat$district)=='Pithorgarh'] <- 'Pithoragarh'
+levels(icrisat$district)[levels(icrisat$district)=='East Midnapore Purba Midnapore'] <- 'Purba Medinipur'
+levels(icrisat$district)[levels(icrisat$district)=='Singhbhum East'] <- 'Purbi Singhbhum'
+levels(icrisat$district)[levels(icrisat$district)=='Purulia'] <- 'Puruliya'
+levels(icrisat$district)[levels(icrisat$district)=='Rae - Bareily'] <- 'Rae Bareli'
+levels(icrisat$district)[levels(icrisat$district)=='Rajanna Siricilla'] <- 'Rajanna'
+levels(icrisat$district)[levels(icrisat$district)=='Ramanagaram'] <- 'Ramanagara'
+levels(icrisat$district)[levels(icrisat$district)=='Ramananthapuram'] <- 'Ramanathapuram'
+levels(icrisat$district)[levels(icrisat$district)=='Ramgadh'] <- 'Ramgarh'
+levels(icrisat$district)[levels(icrisat$district)=='Rangareddy'] <- 'Ranga Reddy'
+levels(icrisat$district)[levels(icrisat$district)=='Sahebganj'] <- 'Sahibganj'
+levels(icrisat$district)[levels(icrisat$district)=='Santh Kabir Nagar'] <- 'Sant Kabir Nagar'
+levels(icrisat$district)[levels(icrisat$district)=='Sariakela Kharsawan'] <- 'Saraikela-Kharsawan'
+levels(icrisat$district)[levels(icrisat$district)=='Sheopur Kalan'] <- 'Sheopur'
+levels(icrisat$district)[levels(icrisat$district)=='Shimoge'] <- 'Shivamogga'
+levels(icrisat$district)[levels(icrisat$district)=='Shravasti'] <- 'Shrawasti'
+levels(icrisat$district)[levels(icrisat$district)=='Sidharthnagar'] <- 'Siddharthnagar'
+levels(icrisat$district)[levels(icrisat$district)=='Sivagangai Pasumpon'] <- 'Sivaganga'
+levels(icrisat$district)[levels(icrisat$district)=='Sibsagar'] <- 'Sivasagar'
+levels(icrisat$district)[levels(icrisat$district)=='Sonepur'] <- 'Subarnapur'
+levels(icrisat$district)[levels(icrisat$district)=='Sonepat'] <- 'Sonipat'
+levels(icrisat$district)[levels(icrisat$district)=='24 - Paraganas South'] <- 'South 24 Parganas'
+levels(icrisat$district)[levels(icrisat$district)=='S.P.S.Nellore'] <- 'Spsr Nellore'
+levels(icrisat$district)[levels(icrisat$district)=='Ganganagar'] <- 'Sri Ganganagar'
+levels(icrisat$district)[levels(icrisat$district)=='Tiruvarur'] <- 'Thiruvarur'
+levels(icrisat$district)[levels(icrisat$district)=='Thirunelveli'] <- 'Tirunelveli'
+levels(icrisat$district)[levels(icrisat$district)=='Tiruchirapalli Trichy'] <- 'Tiruchirappalli'
+levels(icrisat$district)[levels(icrisat$district)=='Thiruvallur'] <- 'Thiruvallur'
+levels(icrisat$district)[levels(icrisat$district)=='Thiruppur'] <- 'Tiruppur'
+levels(icrisat$district)[levels(icrisat$district)=='Thiruvannamalai'] <- 'Tiruvannamalai'
+levels(icrisat$district)[levels(icrisat$district)=='Tumkur'] <- 'Tumakuru'
+levels(icrisat$district)[levels(icrisat$district)=='Uttar Kashi"'] <- 'Uttarkashi'
+levels(icrisat$district)[levels(icrisat$district)=='Bijapur'] <- 'Vijayapura'
+levels(icrisat$district)[levels(icrisat$district)=='Villupuram'] <- 'Viluppuram'
+levels(icrisat$district)[levels(icrisat$district)=='Virudhunagar Kamarajar'] <- 'Virudhunagar'
+levels(icrisat$district)[levels(icrisat$district)=='Yadadri Bhuvanagiri'] <- 'Yadadri'
+levels(icrisat$district)[levels(icrisat$district)=='Yadagiri'] <- 'Yadgiri'
+levels(icrisat$district)[levels(icrisat$district)=='Yeotmal'] <- 'Yavatmal'
 
 
 # Find the max area by district from 2018-2021. 74 f.it > 1
@@ -514,8 +542,8 @@ ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
 
 # ICRISAT 2017 total merge
-trial <- merge(total, icrisat, by=c("district", "state"))
-trial$tf.it <- trial$area.ins/(trial$icr2017_area)
+full <- merge(total, icrisat, by=c("district", "state"))
+full$f.it <- full$area.ins/(full$icr2017_area)
 
 ## Using this f.it delivers all values lower than zero. However,
 ## area us likely overestimated because it is annual, not seasonal.
@@ -538,9 +566,9 @@ total$f.it <- total$area.ins/(total$area)
 rfbins.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) + factor(aug.rain_type)
                               + factor(year) + factor(district), data = total)
 
-rf.glm <- glm(log(prod) ~ jun.rf + jul.rf + aug.rf + I(jun.rf**2) + I(jul.rf**2) + 
-                I(aug.rf**2) + tf.it + I(jun.rf*tf.it) + I(jul.rf*tf.it)
-              + I(aug.rf*tf.it) + factor(year.x) + factor(district), data = trial)
+rf.glm <- glm(log(prod) ~ jun.rf + jul.rf + I(jun.rf**2) + I(jul.rf**2) +
+                f.it + I(jun.rf*f.it) + I(jul.rf*f.it) + I(jun.rf**2*f.it) +
+                I(jul.rf**2*f.it) + factor(year.x) + factor(district), data = full)
 # Rainfall categories 
 
 total$jun.rain_type <- as.factor(ifelse(total$jun.ptdef == -1, 'No Rain',
