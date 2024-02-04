@@ -72,6 +72,18 @@ rain$state <- as.factor(rain$state)
 rain$district <- as.factor(rain$district)
 #rain$year <- as.factor(rain$year)
 
+rain$jan.rf <- rain$jan.rf/1000
+rain$feb.rf <- rain$feb.rf/1000
+rain$mar.rf <- rain$mar.rf/1000
+rain$apr.rf <- rain$apr.rf/1000
+rain$may.rf <- rain$may.rf/1000
+rain$jun.rf <- rain$jun.rf/1000
+rain$jul.rf <- rain$jul.rf/1000
+rain$aug.rf <- rain$aug.rf/1000
+rain$sep.rf <- rain$sep.rf/1000
+rain$oct.rf <- rain$oct.rf/1000
+rain$nov.rf <- rain$nov.rf/1000
+rain$dec.rf <- rain$dec.rf/1000
 # Load and tidy climate data
 climate_data <- read_excel("climate_data_v5.xlsx")
 climate_data$station <- str_to_title(climate_data$station)
