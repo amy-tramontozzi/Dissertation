@@ -91,6 +91,7 @@ climate_data$station <- as.factor(climate_data$station)
 climate_data$stationID <- as.factor(climate_data$stationID)
 
 # Load and tidy ICRISAT data
+## to use to fix area
 icrisat <- read_csv("ICRISAT-District Level Data.csv")
 names(icrisat)[names(icrisat) == "Dist Name"] <- "district"
 names(icrisat)[names(icrisat) == "State Name"] <- "state"
@@ -103,30 +104,51 @@ icrisat$icr2017_prod <- rowSums(icr_prod, na.rm = TRUE)
 icr_yield <- select(icrisat, contains("YIELD"))
 icrisat$icr2017_yield <- rowSums(icr_yield, na.rm = TRUE)
 icrisat <- icrisat[,-6:-80]
-icrisat <- icrisat[,-1:-3]
 
 icrisat$state <- as.factor(icrisat$state)
 icrisat$district <- as.factor(icrisat$district)
 
-# Load and tidy irrigation data
-irrigation <- read_csv("irrigation.csv")
-names(irrigation)[names(irrigation) == "Dist Name"] <- "district"
-names(irrigation)[names(irrigation) == "State Name"] <- "state"
-irrigation[, 6:25][irrigation[, 6:25] == -1.00] <- NA
-total_irr_area <- irrigation[,6:25]
-irrigation$irr_area <- rowSums(total_irr_area, na.rm = TRUE)
-irrigation <- irrigation[,-6:-25]
-irrigation <- irrigation[,-1:-3]
+# Load and tidy ICRISAT full precip data 1958-2015
+## To use for precip normals
+icrisat_rain <- read_csv("icrisat-normal-rain.csv")
+names(icrisat_rain)[names(icrisat_rain) == "JANUARY NORMAL RAINFALL (Millimeters)"] <- "jan.normal"
+names(icrisat_rain)[names(icrisat_rain) == "FEBRUARY NORMAL RAINFALL (Millimeters)"] <- "feb.normal"
+names(icrisat_rain)[names(icrisat_rain) == "MARCH NORMAL RAINFALL (Millimeters)"] <- "mar.normal"
+names(icrisat_rain)[names(icrisat_rain) == "APRIL NORMAL RAINFALL (Millimeters)"] <- "apr.normal"
+names(icrisat_rain)[names(icrisat_rain) == "MAY NORMAL RAINFALL (Millimeters)"] <- "may.normal"
+names(icrisat_rain)[names(icrisat_rain) == "JUNE NORMAL RAINFALL (Millimeters)"] <- "jun.normal"
+names(icrisat_rain)[names(icrisat_rain) == "JULY NORMAL RAINFALL (Millimeters)"] <- "jul.normal"
+names(icrisat_rain)[names(icrisat_rain) == "AUGUST NORMAL RAINFALL (Millimeters)"] <- "aug.normal"
+names(icrisat_rain)[names(icrisat_rain) == "SEPTEMBER NORMAL RAINFALL (Millimeters)"] <- "sep.normal"
+names(icrisat_rain)[names(icrisat_rain) == "OCTOBER NORMAL RAINFALL (Millimeters)"] <- "oct.normal"
+names(icrisat_rain)[names(icrisat_rain) == "NOVEMBER NORMAL RAINFALL (Millimeters)"] <- "nov.normal"
+names(icrisat_rain)[names(icrisat_rain) == "DECEMBER NORMAL RAINFALL (Millimeters)"] <- "dec.normal"
+names(icrisat_rain)[names(icrisat_rain) == "ANNUAL NORMAL RAINFALL (Millimeters)"] <- "annual.normal"
+names(icrisat_rain)[names(icrisat_rain) == "State Name"] <- "state"
+names(icrisat_rain)[names(icrisat_rain) == "Dist Name"] <- "district"
+icrisat_rain$district <- as.factor(icrisat_rain$district)
 
-# Load and tidy ICRISAT seasonal
-icrisat_2015 <- read_excel("icrisat_2015_season.xlsx")
-names(icrisat_2015)[names(icrisat_2015) == "DISTNAME"] <- "district"
-names(icrisat_2015)[names(icrisat_2015) == "STNAME"] <- "state"
-names(icrisat_2015)[names(icrisat_2015) == "YEAR"] <- "year"
-icr15_area <- select(icrisat_2015, contains("KA"))
-icrisat_2015$icr2015_area <- rowSums(icr15_area) 
-icr15_prod <- select(icrisat_2015, contains("KQ"))
-icrisat_2015$icr2015_prod <- rowSums(icr15_prod)
+icrisat <- merge(icrisat, icrisat_rain, by=c("Dist Code"))
+icrisat <- icrisat[,-1:-3]
+icrisat <- icrisat[,-6:-9]
+names(icrisat)[names(icrisat) == "state.x"] <- "state"
+names(icrisat)[names(icrisat) == "district.x"] <- "district"
+
+# change from mm to meters of rf per month normals
+icrisat$jan.normal <- icrisat$jan.normal/1000
+icrisat$feb.normal <- icrisat$feb.normal/1000
+icrisat$mar.normal <- icrisat$mar.normal/1000
+icrisat$apr.normal <- icrisat$apr.normal/1000
+icrisat$may.normal <- icrisat$may.normal/1000
+icrisat$jun.normal <- icrisat$jun.normal/1000
+icrisat$jul.normal <- icrisat$jul.normal/1000
+icrisat$aug.normal <- icrisat$aug.normal/1000
+icrisat$sep.normal <- icrisat$sep.normal/1000
+icrisat$oct.normal <- icrisat$oct.normal/1000
+icrisat$nov.normal <- icrisat$nov.normal/1000
+icrisat$dec.normal <- icrisat$dec.normal/1000
+icrisat$annual.normal <- icrisat$annual.normal/1000
+
 
 ### RENAMING STATIONS TO DISTRICTS
 stat_dis <- read_excel("station_district.xlsx")
@@ -544,7 +566,7 @@ levels(icrisat$district)[levels(icrisat$district)=='Thiruvallur'] <- 'Thiruvallu
 levels(icrisat$district)[levels(icrisat$district)=='Thiruppur'] <- 'Tiruppur'
 levels(icrisat$district)[levels(icrisat$district)=='Thiruvannamalai'] <- 'Tiruvannamalai'
 levels(icrisat$district)[levels(icrisat$district)=='Tumkur'] <- 'Tumakuru'
-levels(icrisat$district)[levels(icrisat$district)=='Uttar Kashi"'] <- 'Uttarkashi'
+levels(icrisat$district)[levels(icrisat$district)=='Uttar Kashi'] <- 'Uttarkashi'
 levels(icrisat$district)[levels(icrisat$district)=='Bijapur'] <- 'Vijayapura'
 levels(icrisat$district)[levels(icrisat$district)=='Villupuram'] <- 'Viluppuram'
 levels(icrisat$district)[levels(icrisat$district)=='Virudhunagar Kamarajar'] <- 'Virudhunagar'
@@ -572,6 +594,18 @@ total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
 # The below code is used to write a CSV for the dataset with the matched names in ICRISAT
 total <- merge(total, icrisat, by=c("district", "state"))
 total$f.it <- total$area.ins/(total$icr2017_area)
+total$jan.rfdev <- ((total$jan.rf - total$jan.normal)/total$jan.normal)
+total$feb.rfdev <- ((total$feb.rf - total$feb.normal)/total$feb.normal)
+total$mar.rfdev <- ((total$mar.rf - total$mar.normal)/total$mar.normal)
+total$apr.rfdev <- ((total$apr.rf - total$apr.normal)/total$apr.normal)
+total$may.rfdev <- ((total$may.rf - total$may.normal)/total$may.normal)
+total$jun.rfdev <- ((total$jun.rf - total$jun.normal)/total$jun.normal)
+total$jul.rfdev <- ((total$jul.rf - total$jul.normal)/total$jul.normal)
+total$aug.rfdev <- ((total$aug.rf - total$aug.normal)/total$aug.normal)
+total$sep.rfdev <- ((total$sep.rf - total$sep.normal)/total$sep.normal)
+total$oct.rfdev <- ((total$oct.rf - total$oct.normal)/total$oct.normal)
+total$nov.rfdev <- ((total$nov.rf - total$nov.normal)/total$nov.normal)
+total$dec.rfdev <- ((total$dec.rf - total$dec.normal)/total$dec.normal)
 
 # The code below is to replace NAs with . for STATA
 total[, 4:54][is.na(total[, 4:54])] <- '.'
