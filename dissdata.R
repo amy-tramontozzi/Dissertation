@@ -235,12 +235,8 @@ levels(ins$district)[levels(ins$district)=='Shravasti'] <- 'Shrawasti'
 levels(ins$district)[levels(ins$district)=='Namchi'] <- 'South District'
 levels(ins$district)[levels(ins$district)=='Nellore'] <- 'Spsr Nellore'
 levels(ins$district)[levels(ins$district)=='Sonepur'] <- 'Subarnapur'
-levels(ins$district)[levels(ins$district)=='Thanjavur I'] <- 'Thanjavur'
-levels(ins$district)[levels(ins$district)=='Thanjavur II'] <- 'Thanjavur'
 levels(ins$district)[levels(ins$district)=='Thiruvarur II'] <- 'Thiruvarur'
 levels(ins$district)[levels(ins$district)=='Visakhapatanam'] <- 'Visakhapatnam'
-levels(ins$district)[levels(ins$district)=='Warangal Rural'] <- 'Warangal'
-levels(ins$district)[levels(ins$district)=='Warangal Urban'] <- 'Warangal'
 levels(ins$district)[levels(ins$district)=='Kanker'] <- 'Uttar Bastar Kanker'
 
 levels(rain$district)[levels(rain$district)=='Agar-Malwa'] <- 'Agar Malwa'
@@ -608,7 +604,7 @@ total$nov.rfdev <- ((total$nov.rf - total$nov.normal)/total$nov.normal)
 total$dec.rfdev <- ((total$dec.rf - total$dec.normal)/total$dec.normal)
 
 # The code below is to replace NAs with . for STATA
-total[, 4:54][is.na(total[, 4:54])] <- '.'
+total[, 4:79][is.na(total[, 4:79])] <- '.'
 # ICRISAT 2017 total merge
 full <- merge(total, icrisat, by=c("district", "state"))
 full$f.it <- full$area.ins/(full$icr2017_area)
