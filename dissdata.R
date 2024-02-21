@@ -89,6 +89,7 @@ climate_data <- read_excel("climate_data_v5.xlsx")
 climate_data$station <- str_to_title(climate_data$station)
 climate_data$station <- as.factor(climate_data$station)
 climate_data$stationID <- as.factor(climate_data$stationID)
+climate_data$district <- as.factor(climate_data$district)
 
 # Load and tidy ICRISAT data
 ## to use to fix area
@@ -652,19 +653,20 @@ total$sep.rain_type <- as.factor(ifelse(total$sep.ptdef == -1, 'No Rain',
                                  ifelse(total$sep.ptdef >= -.19 & total$sep.ptdef <= .19, 'Normal',
                                  ifelse(total$sep.ptdef <= -.20, 'Deficient', 'Other')))))
 
-# Create climate/ins 2018 dataframe
-climate_data_noNA <- na.omit(climate_data) # Omit all climate NAs
-climate_data2018_noNA <- filter(climate_data_noNA, year > 2017) # All climate data from 2018
-climate_data2018_agg <- aggregate(. ~ district + year, FUN = mean, data=climate_data2018_noNA) # Aggregate stations to districts
-climate_data2018_agg <- climate_data2018[,-3:-4] # Remove stations and station ID
-climate_data2018_agg <- climate_data2018 %>% mutate_if(is.numeric, ~round(., 1)) # Round temps to 1 digit
-climate_ins_2018 <- inner_join(ins, climate_data2018, by=c("district" = "district", "year" = "year")) # Merge ins and 2018 climate
-## Result is 223 observations for primary regression
-# Create climate/ins full dataframe
-climate_data_agg <- aggregate(. ~ district + year, FUN = mean, data=climate_data_noNA) # Aggregate stations to districts
-climate_data_agg <- climate_data_agg[,-3:-4] # Remove stations and station ID
-climate_data_agg <- climate_data_agg %>% mutate_if(is.numeric, ~round(., 1)) # Round temps to 1 digit
-## Result is 7723 observations for full regression
+
+# Use CDSP data to create state-wise temp values. Limited to 2020 with 50 state obs
+climate_data_2018 <- filter(climate_data, year > 2017) # All climate data w NAs from 2018
+climate_data_agg <- aggregate(. ~ district + year, FUN = mean, data=climate_data_2018, na.rm = TRUE) # Aggregate stations to districts
+climate_ins_2018 <- inner_join(ins, climate_data_agg, by=c("district" = "district", "year" = "year")) # Merge ins and 2018 climate
+climate_ins_2018 <- climate_ins_2018[,-4:-25]
+climate_ins_2018 <- aggregate(. ~ state + year, data = climate_ins_2018, FUN = mean, na.rm = TRUE)
+climate_ins_2018[, 4:39][climate_ins_2018[, 4:39] == 0] <- NA # Seems like scraping did not work well
+
+rf_remove <- select(climate_ins_2018, contains("rf"))
+climate_ins_2018 <- climate_ins_2018[, !names(climate_ins_2018) %in% names(rf_remove)] # Get rid of rainfall categories
+climate_ins_2018 <- climate_ins_2018[,-3]
+
+trial <- inner_join(total, climate_ins_2018, by=c("state" = "state", "year" = "year")) # Merge total and 2018 climate
 
 # Create variable labels
 total = apply_labels(total,
