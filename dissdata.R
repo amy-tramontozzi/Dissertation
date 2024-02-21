@@ -85,10 +85,16 @@ rain$oct.rf <- rain$oct.rf/1000
 rain$nov.rf <- rain$nov.rf/1000
 rain$dec.rf <- rain$dec.rf/1000
 # Load and tidy climate data
+
 climate_data <- read_excel("climate_data_v5.xlsx")
 climate_data$station <- str_to_title(climate_data$station)
 climate_data$station <- as.factor(climate_data$station)
 climate_data$stationID <- as.factor(climate_data$stationID)
+
+### RENAMING STATIONS TO DISTRICTS
+stat_dis <- read_excel("station_district.xlsx")
+stat_dis$station <- str_to_title(stat_dis$station)
+climate_data <- merge(climate_data, stat_dis, by = "station")
 climate_data$district <- as.factor(climate_data$district)
 
 # Load and tidy ICRISAT data
@@ -108,6 +114,7 @@ icrisat <- icrisat[,-6:-80]
 
 icrisat$state <- as.factor(icrisat$state)
 icrisat$district <- as.factor(icrisat$district)
+
 
 # Load and tidy ICRISAT full precip data 1958-2015
 ## To use for precip normals
@@ -129,33 +136,27 @@ names(icrisat_rain)[names(icrisat_rain) == "State Name"] <- "state"
 names(icrisat_rain)[names(icrisat_rain) == "Dist Name"] <- "district"
 icrisat_rain$district <- as.factor(icrisat_rain$district)
 
-icrisat <- merge(icrisat, icrisat_rain, by=c("Dist Code"))
-icrisat <- icrisat[,-1:-3]
-icrisat <- icrisat[,-6:-9]
-names(icrisat)[names(icrisat) == "state.x"] <- "state"
-names(icrisat)[names(icrisat) == "district.x"] <- "district"
+icrisat_rain <- merge(icrisat, icrisat_rain, by=c("Dist Code"))
+icrisat_rain <- icrisat_rain[,-1:-3]
+icrisat_rain <- icrisat_rain[,-6:-8]
+names(icrisat_rain)[names(icrisat_rain) == "state.x"] <- "state"
+names(icrisat_rain)[names(icrisat_rain) == "district.x"] <- "district"
 
 # change from mm to meters of rf per month normals
-icrisat$jan.normal <- icrisat$jan.normal/1000
-icrisat$feb.normal <- icrisat$feb.normal/1000
-icrisat$mar.normal <- icrisat$mar.normal/1000
-icrisat$apr.normal <- icrisat$apr.normal/1000
-icrisat$may.normal <- icrisat$may.normal/1000
-icrisat$jun.normal <- icrisat$jun.normal/1000
-icrisat$jul.normal <- icrisat$jul.normal/1000
-icrisat$aug.normal <- icrisat$aug.normal/1000
-icrisat$sep.normal <- icrisat$sep.normal/1000
-icrisat$oct.normal <- icrisat$oct.normal/1000
-icrisat$nov.normal <- icrisat$nov.normal/1000
-icrisat$dec.normal <- icrisat$dec.normal/1000
-icrisat$annual.normal <- icrisat$annual.normal/1000
+icrisat_rain$jan.normal <- icrisat_rain$jan.normal/1000
+icrisat_rain$feb.normal <- icrisat_rain$feb.normal/1000
+icrisat_rain$mar.normal <- icrisat_rain$mar.normal/1000
+icrisat_rain$apr.normal <- icrisat_rain$apr.normal/1000
+icrisat_rain$may.normal <- icrisat_rain$may.normal/1000
+icrisat_rain$jun.normal <- icrisat_rain$jun.normal/1000
+icrisat_rain$jul.normal <- icrisat_rain$jul.normal/1000
+icrisat_rain$aug.normal <- icrisat_rain$aug.normal/1000
+icrisat_rain$sep.normal <- icrisat_rain$sep.normal/1000
+icrisat_rain$oct.normal <- icrisat_rain$oct.normal/1000
+icrisat_rain$nov.normal <- icrisat_rain$nov.normal/1000
+icrisat_rain$dec.normal <- icrisat_rain$dec.normal/1000
+icrisat_rain$annual.normal <- icrisat_rain$annual.normal/1000
 
-
-### RENAMING STATIONS TO DISTRICTS
-stat_dis <- read_excel("station_district.xlsx")
-stat_dis$station <- str_to_title(stat_dis$station)
-climate_data <- merge(climate_data, stat_dis, by = "station")
-climate_data$district <- as.factor(climate_data$district)
 ### RENAMING DISTRICTS TO MERGE
 
 # Rename insurance districts to match climate districts
@@ -571,25 +572,15 @@ levels(icrisat$district)[levels(icrisat$district)=='Yadadri Bhuvanagiri'] <- 'Ya
 levels(icrisat$district)[levels(icrisat$district)=='Yadagiri'] <- 'Yadgiri'
 levels(icrisat$district)[levels(icrisat$district)=='Yeotmal'] <- 'Yavatmal'
 
-
-# Find the max area by district from 2018-2021. 74 f.it > 1
-total <- total %>%
-  group_by(district) %>%
-  mutate(area_max_4 = max(area)) %>%
-  ungroup()
-
-# Find the max area by district from 2018-2021. 139 f.it > 1
-prod1997 <- prod1997 %>%
-  group_by(district) %>%
-  mutate(area_max97 = max(area)) %>%
-  ungroup()
-
 # Create ins/rain/prod dataframe
 ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
 
+# Merge ins/rain/prod with ICRISAT only for area use
+rf_only <- merge(total, icrisat, by=c("district", "state"))
+rf_only$f.it <- rf_only$area.ins/(rf_only$icr2017_area)
 # The below code is used to write a CSV for the dataset with the matched names in ICRISAT
-total <- merge(total, icrisat, by=c("district", "state"))
+total <- merge(total, icrisat_rain, by=c("district", "state"))
 total$f.it <- total$area.ins/(total$icr2017_area)
 total$jan.rfdev <- ((total$jan.rf - total$jan.normal)/total$jan.normal)
 total$feb.rfdev <- ((total$feb.rf - total$feb.normal)/total$feb.normal)
@@ -604,28 +595,27 @@ total$oct.rfdev <- ((total$oct.rf - total$oct.normal)/total$oct.normal)
 total$nov.rfdev <- ((total$nov.rf - total$nov.normal)/total$nov.normal)
 total$dec.rfdev <- ((total$dec.rf - total$dec.normal)/total$dec.normal)
 
+# Use CDSP data to create state-wise temp values. Limited to 2020 with 50 state obs
+climate_data_2018 <- filter(climate_data, year > 2017) # All climate data w NAs from 2018
+climate_data_agg <- aggregate(. ~ district + year, FUN = mean, data=climate_data_2018, na.rm = TRUE) # Aggregate stations to districts
+climate_ins_2018 <- inner_join(ins, climate_data_agg, by=c("district" = "district", "year" = "year")) # Merge ins and 2018 climate
+climate_ins_2018 <- climate_ins_2018[,-4:-25]
+climate_ins_2018 <- aggregate(. ~ state + year, data = climate_ins_2018, FUN = mean, na.rm = TRUE)
+climate_ins_2018[, 4:39][climate_ins_2018[, 4:39] == 0] <- NA # Seems like scraping did not work well
+
+rf_remove <- select(climate_ins_2018, contains("rf"))
+climate_ins_2018 <- climate_ins_2018[, !names(climate_ins_2018) %in% names(rf_remove)] # Get rid of rainfall categories
+climate_ins_2018 <- climate_ins_2018[,-3]
+
+temp_rf_only <- inner_join(rf_only, climate_ins_2018, by=c("state" = "state", "year.x" = "year")) # Merge rf only and 2018 climate
+temp_rfdev <- inner_join(total, climate_ins_2018, by=c("state" = "state", "year" = "year")) # Merge rf devs and 2018 climate
+
+
 # The code below is to replace NAs with . for STATA
-total[, 4:79][is.na(total[, 4:79])] <- '.'
-# ICRISAT 2017 total merge
-full <- merge(total, icrisat, by=c("district", "state"))
-full$f.it <- full$area.ins/(full$icr2017_area)
-
-## Using this f.it delivers all values lower than zero. However,
-## area us likely overestimated because it is annual, not seasonal.
-
-# ICRISAT 2015 total merge
-icrisat_2015 <- icrisat_2015 %>%
-  filter(year == 2015)
-total_2015 <- merge(total, icrisat_2015, by=c("district", "state"))
-total_2015$f.it15 <- total_2015$area.ins/(total_2015$icr2015_area)
-
-total_2015$icr2015_area[total_2015$f.it15==Inf] <- 0.43
-## Using this f.it15 gives 133 f.it15 > 1 (better to at least use max from 2018-2021).
-## I think primarily, should use the full one.
-
-## Using this is from the original prod1997 area, 159 f.it > 1
-total$f.it <- total$area.ins/(total$area)
-#total$f.it[total$f.it > 1] <- 1.00 # only if no other solution
+rf_only[, 4:57][is.na(rf_only[, 4:57])] <- '.'
+total[, 4:80][is.na(total[, 4:80])] <- '.'
+temp_rf_only[, 4:81][is.na(temp_rf_only[, 4:81])] <- '.'
+temp_rfdev[, 4:104][is.na(temp_rfdev[, 4:104])] <- '.'
 
 # GLMs
 rfbins.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) +  
@@ -652,21 +642,6 @@ total$sep.rain_type <- as.factor(ifelse(total$sep.ptdef == -1, 'No Rain',
                                  ifelse(total$sep.ptdef >= 0.20, 'Excess',
                                  ifelse(total$sep.ptdef >= -.19 & total$sep.ptdef <= .19, 'Normal',
                                  ifelse(total$sep.ptdef <= -.20, 'Deficient', 'Other')))))
-
-
-# Use CDSP data to create state-wise temp values. Limited to 2020 with 50 state obs
-climate_data_2018 <- filter(climate_data, year > 2017) # All climate data w NAs from 2018
-climate_data_agg <- aggregate(. ~ district + year, FUN = mean, data=climate_data_2018, na.rm = TRUE) # Aggregate stations to districts
-climate_ins_2018 <- inner_join(ins, climate_data_agg, by=c("district" = "district", "year" = "year")) # Merge ins and 2018 climate
-climate_ins_2018 <- climate_ins_2018[,-4:-25]
-climate_ins_2018 <- aggregate(. ~ state + year, data = climate_ins_2018, FUN = mean, na.rm = TRUE)
-climate_ins_2018[, 4:39][climate_ins_2018[, 4:39] == 0] <- NA # Seems like scraping did not work well
-
-rf_remove <- select(climate_ins_2018, contains("rf"))
-climate_ins_2018 <- climate_ins_2018[, !names(climate_ins_2018) %in% names(rf_remove)] # Get rid of rainfall categories
-climate_ins_2018 <- climate_ins_2018[,-3]
-
-trial <- inner_join(total, climate_ins_2018, by=c("state" = "state", "year" = "year")) # Merge total and 2018 climate
 
 # Create variable labels
 total = apply_labels(total,
