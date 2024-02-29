@@ -9,6 +9,8 @@ library(dplyr)
 library(stringdist)
 library(expss)
 
+
+
 # Load and tidy prod data 
 ## Summing area, prod, and yield across crops
 prod1997 <- read_excel("prod1997.xls", guess_max = 20000)
@@ -156,6 +158,61 @@ icrisat_rain$oct.normal <- icrisat_rain$oct.normal/1000
 icrisat_rain$nov.normal <- icrisat_rain$nov.normal/1000
 icrisat_rain$dec.normal <- icrisat_rain$dec.normal/1000
 icrisat_rain$annual.normal <- icrisat_rain$annual.normal/1000
+
+# Import big rain to make original rain normals
+
+big_rain <- read_csv("for_unique_rain_normals.csv")
+names(big_rain)[names(big_rain) == "JANUARY PERCIPITATION (Millimeters)"] <- "jan.rain"
+names(big_rain)[names(big_rain) == "FEBRUARY PERCIPITATION (Millimeters)"] <- "feb.rain"
+names(big_rain)[names(big_rain) == "MARCH PERCIPITATION (Millimeters)"] <- "mar.rain"
+names(big_rain)[names(big_rain) == "APRIL PERCIPITATION (Millimeters)"] <- "apr.rain"
+names(big_rain)[names(big_rain) == "MAY PERCIPITATION (Millimeters)"] <- "may.rain"
+names(big_rain)[names(big_rain) == "JUNE PERCIPITATION (Millimeters)"] <- "jun.rain"
+names(big_rain)[names(big_rain) == "JULY PERCIPITATION (Millimeters)"] <- "jul.rain"
+names(big_rain)[names(big_rain) == "AUGUST PERCIPITATION (Millimeters)"] <- "aug.rain"
+names(big_rain)[names(big_rain) == "SEPTEMBER PERCIPITATION (Millimeters)"] <- "sep.rain"
+names(big_rain)[names(big_rain) == "OCTOBER PERCIPITATION (Millimeters)"] <- "oct.rain"
+names(big_rain)[names(big_rain) == "NOVEMBER PERCIPITATION (Millimeters)"] <- "nov.rain"
+names(big_rain)[names(big_rain) == "DECEMBER PERCIPITATION (Millimeters)"] <- "dec.rain"
+names(big_rain)[names(big_rain) == "ANNUAL PERCIPITATION (Millimeters)"] <- "annual.rain"
+names(big_rain)[names(big_rain) == "State Name"] <- "state"
+names(big_rain)[names(big_rain) == "Dist Name"] <- "district"
+big_rain$district <- as.factor(big_rain$district)
+
+big_rain <- filter(big_rain, Year > 1984)
+
+big_rain <- big_rain %>% group_by(district) %>%mutate(jan_mean = mean(jan.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(feb_mean = mean(feb.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(mar_mean = mean(mar.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(apr_mean = mean(apr.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(may_mean = mean(may.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(jun_mean = mean(jun.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(jul_mean = mean(jul.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(aug_mean = mean(aug.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(sep_mean = mean(sep.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(oct_mean = mean(oct.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(nov_mean = mean(nov.rain, na.rm = TRUE))
+big_rain <- big_rain %>% group_by(district) %>%mutate(dec_mean = mean(dec.rain, na.rm = TRUE))
+
+big_rain <- filter(big_rain, Year == 2015)
+big_rain <- big_rain[,-6:-17]
+big_rain <- big_rain[,-2:-2]
+
+big_rain$jan.normal <- big_rain$jan.normal/1000
+big_rain$feb.normal <- big_rain$feb.normal/1000
+big_rain$mar.normal <- big_rain$mar.normal/1000
+big_rain$apr.normal <- big_rain$apr.normal/1000
+big_rain$may.normal <- big_rain$may.normal/1000
+big_rain$jun.normal <- big_rain$jun.normal/1000
+big_rain$jul.normal <- big_rain$jul.normal/1000
+big_rain$aug.normal <- big_rain$aug.normal/1000
+big_rain$sep.normal <- big_rain$sep.normal/1000
+big_rain$oct.normal <- big_rain$oct.normal/1000
+big_rain$nov.normal <- big_rain$nov.normal/1000
+big_rain$dec.normal <- big_rain$dec.normal/1000
+big_rain$annual.normal <- big_rain$annual.normal/1000
+
+normals_rain <- merge(icrisat, big_rain, by=c("Dist Code"))
 
 ### RENAMING DISTRICTS TO MERGE
 
@@ -572,6 +629,17 @@ levels(icrisat$district)[levels(icrisat$district)=='Yadadri Bhuvanagiri'] <- 'Ya
 levels(icrisat$district)[levels(icrisat$district)=='Yadagiri'] <- 'Yadgiri'
 levels(icrisat$district)[levels(icrisat$district)=='Yeotmal'] <- 'Yavatmal'
 
+# Rename temperature districts
+tempmissing.dis <- levels(climate_data$district)[!(levels(climate_data$district) %in% levels(ins$district))]
+
+levels(climate_data$district)[levels(climate_data$district)=='East Singhbhum'] <- 'Purbi Singhbhum'
+levels(climate_data$district)[levels(climate_data$district)=='Gangtok'] <- 'East District'
+levels(climate_data$district)[levels(climate_data$district)=='Gondia'] <- 'Gondiya'
+levels(climate_data$district)[levels(climate_data$district)=='Nellore'] <- 'Spsr Nellore'
+levels(climate_data$district)[levels(climate_data$district)=='Prayagraj'] <- 'Allahabad'
+levels(climate_data$district)[levels(climate_data$district)=='Ri Bhoi'] <- 'Ribhoi'
+
+
 # Create ins/rain/prod dataframe
 ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
 total <- merge(ins_rain, prod1997, by=c("district", "state", "year"))
@@ -618,12 +686,11 @@ temp_rf_only[, 4:81][is.na(temp_rf_only[, 4:81])] <- '.'
 temp_rfdev[, 4:104][is.na(temp_rfdev[, 4:104])] <- '.'
 
 # GLMs
-rfbins.glm <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) +  
+model_bins <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) +  
                     f.it + I(jun.rf*f.it) + I(jul.rf*f.it) + factor(year.x) 
                   + factor(district), data = full)
 
-rf.glm <- glm(log(prod) ~ jun.rf + jul.rf + I(jun.rf**2) + I(jul.rf**2) +
-                f.it + I(jun.rf*f.it) + I(jul.rf*f.it) + factor(year.x) + factor(district), data = full)
+model <- glm(log(prod) ~ aug.rfdev + f.it + I(aug.rfdev*f.it) + factor(year) + factor(district), data = temp_rfdev)
 # Rainfall categories 
 
 full$jun.rain_type <- as.factor(ifelse(full$jun.ptdef == -1, 'No Rain',
