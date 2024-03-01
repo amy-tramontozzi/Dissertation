@@ -39,6 +39,9 @@ prod1997$district <- as.factor(prod1997$district)
 
 prod1997$area <- prod1997$area/1000
 
+prod2021 <- filter(prod1997, year > 2017)
+prod1997 <- filter(prod1997, year < 2018)
+
 # Load and tidy insurance data
 ins <- read_excel("districtdata.xlsx")
 ins <- ins[,-24:-41]
@@ -230,7 +233,9 @@ names(icrisat_normals)[names(icrisat_normals) == "State Code.x"] <- "State Code"
 names(icrisat_normals)[names(icrisat_normals) == "year.x"] <- "year"
 
 common_for_all <- icrisat_normals[c(1,3,18:32)]
-unique_districts <- distinct(common_for_all)
+common_for_all <- distinct(common_for_all)
+dist_code <- icrisat_normals[c(1,4,5)]
+dist_code <- distinct(dist_code)
 icrisat_normals <- icrisat_normals[-c(3,18:32)]
 
 
@@ -668,20 +673,31 @@ levels(climate_data$district)[levels(climate_data$district)=='Ri Bhoi'] <- 'Ribh
 prod_icrisat_normals <- merge(icrisat_normals, prod1997, by=c("district", "state", "year"))
 
 ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
+ins_rain_prod <- merge(ins_rain, prod2021, by=c("district","state", "year"))
+ins_rain_prod <- merge(ins_rain_prod, dist_code, by=c("district","state"))
 
-common_districts <- intersect(prod_icrisat_normals$district, ins_rain$district)
-common_states <- intersect(prod_icrisat_normals$state, ins_rain$state)
+combined_data <- bind_rows(prod_icrisat_normals, ins_rain_prod)
 
-# Subset datasets to include only common districts and states
-data_1_common <- prod_icrisat_normals[prod_icrisat_normals$district %in% common_districts & prod_icrisat_normals$state %in% common_states, ]
-data_2_common <- ins_rain[ins_rain$district %in% common_districts & ins_rain$state %in% common_states, ]
+prod_icrisat_all <- merge(combined_data, common_for_all, by ="Dist Code")
+prod_icrisat_all[,20:39][is.na(prod_icrisat_all[,20:39])] <- 0
 
-# Combine datasets row-wise
-combined_data <- bind_rows(data_1_common, data_2_common)
+prod_icrisat_all$f.it <- prod_icrisat_all$area.ins/(prod_icrisat_all$icr2017_area)
 
-combined_data <- merge(combined_data, unique_districts, by = "Dist Code")
-combined_data[,20:39][is.na(combined_data[,20:39])] <- 0
-# Loop over columns to fill missing values
+
+prod_icrisat_all$jan.rfdev <- ((prod_icrisat_all$jan.rf - prod_icrisat_all$jan_mean)/prod_icrisat_all$jan_mean)
+prod_icrisat_all$feb.rfdev <- ((prod_icrisat_all$feb.rf - prod_icrisat_all$feb_mean)/prod_icrisat_all$feb_mean)
+prod_icrisat_all$mar.rfdev <- ((prod_icrisat_all$mar.rf - prod_icrisat_all$mar_mean)/prod_icrisat_all$mar_mean)
+prod_icrisat_all$apr.rfdev <- ((prod_icrisat_all$apr.rf - prod_icrisat_all$apr_mean)/prod_icrisat_all$apr_mean)
+prod_icrisat_all$may.rfdev <- ((prod_icrisat_all$may.rf - prod_icrisat_all$may_mean)/prod_icrisat_all$may_mean)
+prod_icrisat_all$jun.rfdev <- ((prod_icrisat_all$jun.rf - prod_icrisat_all$jun_mean)/prod_icrisat_all$jun_mean)
+prod_icrisat_all$jul.rfdev <- ((prod_icrisat_all$jul.rf - prod_icrisat_all$jul_mean)/prod_icrisat_all$jul_mean)
+prod_icrisat_all$aug.rfdev <- ((prod_icrisat_all$aug.rf - prod_icrisat_all$aug_mean)/prod_icrisat_all$aug_mean)
+prod_icrisat_all$sep.rfdev <- ((prod_icrisat_all$sep.rf - prod_icrisat_all$sep_mean)/prod_icrisat_all$sep_mean)
+prod_icrisat_all$oct.rfdev <- ((prod_icrisat_all$oct.rf - prod_icrisat_all$oct_mean)/prod_icrisat_all$oct_mean)
+prod_icrisat_all$nov.rfdev <- ((prod_icrisat_all$nov.rf - prod_icrisat_all$nov_mean)/prod_icrisat_all$nov_mean)
+prod_icrisat_all$dec.rfdev <- ((prod_icrisat_all$dec.rf - prod_icrisat_all$dec_mean)/prod_icrisat_all$dec_mean)
+
+prod_icrisat_all[is.na(prod_icrisat_all)] <- '.'
 
 # Merge ins/rain/prod with ICRISAT only for area use
 rf_only <- merge(ins, icrisat_normals, by=c("district", "state"))
@@ -716,7 +732,6 @@ climate_ins_2018 <- climate_ins_2018[,-3]
 
 temp_rf_only <- inner_join(rf_only, climate_ins_2018, by=c("state" = "state", "year.x" = "year")) # Merge rf only and 2018 climate
 temp_rfdev <- inner_join(total, climate_ins_2018, by=c("state" = "state", "year" = "year")) # Merge rf devs and 2018 climate
-
 
 # The code below is to replace NAs with . for STATA
 rf_only[, 4:57][is.na(rf_only[, 4:57])] <- '.'
