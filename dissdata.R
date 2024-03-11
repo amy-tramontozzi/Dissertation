@@ -10,7 +10,6 @@ library(stringdist)
 library(expss)
 
 
-
 # Load and tidy prod data 
 ## Summing area, prod, and yield across crops
 prod1997 <- read_excel("prod1997.xls", guess_max = 20000)
@@ -684,20 +683,50 @@ prod_icrisat_all[,20:39][is.na(prod_icrisat_all[,20:39])] <- 0
 prod_icrisat_all$f.it <- prod_icrisat_all$area.ins/(prod_icrisat_all$icr2017_area)
 
 
-prod_icrisat_all$jan.rfdev <- ((prod_icrisat_all$jan.rf - prod_icrisat_all$jan_mean)/prod_icrisat_all$jan_mean)
-prod_icrisat_all$feb.rfdev <- ((prod_icrisat_all$feb.rf - prod_icrisat_all$feb_mean)/prod_icrisat_all$feb_mean)
-prod_icrisat_all$mar.rfdev <- ((prod_icrisat_all$mar.rf - prod_icrisat_all$mar_mean)/prod_icrisat_all$mar_mean)
-prod_icrisat_all$apr.rfdev <- ((prod_icrisat_all$apr.rf - prod_icrisat_all$apr_mean)/prod_icrisat_all$apr_mean)
-prod_icrisat_all$may.rfdev <- ((prod_icrisat_all$may.rf - prod_icrisat_all$may_mean)/prod_icrisat_all$may_mean)
-prod_icrisat_all$jun.rfdev <- ((prod_icrisat_all$jun.rf - prod_icrisat_all$jun_mean)/prod_icrisat_all$jun_mean)
-prod_icrisat_all$jul.rfdev <- ((prod_icrisat_all$jul.rf - prod_icrisat_all$jul_mean)/prod_icrisat_all$jul_mean)
-prod_icrisat_all$aug.rfdev <- ((prod_icrisat_all$aug.rf - prod_icrisat_all$aug_mean)/prod_icrisat_all$aug_mean)
-prod_icrisat_all$sep.rfdev <- ((prod_icrisat_all$sep.rf - prod_icrisat_all$sep_mean)/prod_icrisat_all$sep_mean)
-prod_icrisat_all$oct.rfdev <- ((prod_icrisat_all$oct.rf - prod_icrisat_all$oct_mean)/prod_icrisat_all$oct_mean)
-prod_icrisat_all$nov.rfdev <- ((prod_icrisat_all$nov.rf - prod_icrisat_all$nov_mean)/prod_icrisat_all$nov_mean)
-prod_icrisat_all$dec.rfdev <- ((prod_icrisat_all$dec.rf - prod_icrisat_all$dec_mean)/prod_icrisat_all$dec_mean)
+prod_icrisat_all$jan.rfdev <- ((prod_icrisat_all$jan.rf - prod_icrisat_all$jan_mean)/(prod_icrisat_all$jan_mean+1))
+prod_icrisat_all$feb.rfdev <- ((prod_icrisat_all$feb.rf - prod_icrisat_all$feb_mean)/(prod_icrisat_all$feb_mean))
+prod_icrisat_all$mar.rfdev <- ((prod_icrisat_all$mar.rf - prod_icrisat_all$mar_mean)/(prod_icrisat_all$mar_mean))
+prod_icrisat_all$apr.rfdev <- ((prod_icrisat_all$apr.rf - prod_icrisat_all$apr_mean)/(prod_icrisat_all$apr_mean+1))
+prod_icrisat_all$may.rfdev <- ((prod_icrisat_all$may.rf - prod_icrisat_all$may_mean)/(prod_icrisat_all$may_mean))
+prod_icrisat_all$jun.rfdev <- ((prod_icrisat_all$jun.rf - prod_icrisat_all$jun_mean)/(prod_icrisat_all$jun_mean))
+prod_icrisat_all$jul.rfdev <- ((prod_icrisat_all$jul.rf - prod_icrisat_all$jul_mean)/(prod_icrisat_all$jul_mean))
+prod_icrisat_all$aug.rfdev <- ((prod_icrisat_all$aug.rf - prod_icrisat_all$aug_mean)/(prod_icrisat_all$aug_mean))
+prod_icrisat_all$sep.rfdev <- ((prod_icrisat_all$sep.rf - prod_icrisat_all$sep_mean)/(prod_icrisat_all$sep_mean))
+prod_icrisat_all$oct.rfdev <- ((prod_icrisat_all$oct.rf - prod_icrisat_all$oct_mean)/(prod_icrisat_all$oct_mean))
+prod_icrisat_all$nov.rfdev <- ((prod_icrisat_all$nov.rf - prod_icrisat_all$nov_mean)/(prod_icrisat_all$nov_mean))
+prod_icrisat_all$dec.rfdev <- ((prod_icrisat_all$dec.rf - prod_icrisat_all$dec_mean)/(prod_icrisat_all$dec_mean))
 
 prod_icrisat_all[is.na(prod_icrisat_all)] <- '.'
+
+
+prod_icrisat_all %>% 
+  get_summary_stats(
+    jan.rfdev, feb.rfdev, mar.rfdev, apr.rfdev,
+    may.rfdev, jun.rfdev, jul.rfdev, aug.rfdev,
+    sep.rfdev, oct.rfdev, nov.rfdev, dec.rfdev,
+    type = "common") 
+
+
+average_rainfall <- prod_icrisat_all %>%
+  group_by(year) %>%
+  summarize(
+    jun_rf_avg = mean(jun.rf, na.rm = TRUE),  # Calculate average rainfall for June
+    jul_rf_avg = mean(jul.rf, na.rm = TRUE),  # Calculate average rainfall for July
+    aug_rf_avg = mean(aug.rf, na.rm = TRUE)   # Calculate average rainfall for August
+  )
+
+average_rainfall_melted <- melt(average_rainfall, id.vars = "year", variable.name = "month", value.name = "avg_rainfall")
+
+
+
+# Plot the average monthly rainfall across districts by year
+ggplot(average_rainfall_melted, aes(x = year, y = avg_rainfall, color = month)) +
+  geom_line() +
+  geom_smooth(method = "lm", se = FALSE) +  # Add linear trend lines
+  labs(x = "", y = "Rainfall (Meters)", title = "Average District Monthly Rainfall, 1997-2021") +
+  scale_color_viridis_d(labels = c("June", "July", "August"), name = "") +
+  scale_x_continuous(breaks = unique(average_rainfall_melted$year)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Merge ins/rain/prod with ICRISAT only for area use
 rf_only <- merge(ins, icrisat_normals, by=c("district", "state"))
