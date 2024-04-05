@@ -681,7 +681,8 @@ prod_icrisat_all <- merge(combined_data, common_for_all, by ="Dist Code")
 prod_icrisat_all[,20:39][is.na(prod_icrisat_all[,20:39])] <- 0
 
 prod_icrisat_all$f.it <- prod_icrisat_all$area.ins/(prod_icrisat_all$icr2017_area)
-
+prod_icrisat_all$f.it2 <- prod_icrisat_all$area.ins/prod_icrisat_all$area
+prod_icrisat_all$f.it2[prod_icrisat_all$f.it2 > 1] <- 1
 
 prod_icrisat_all$jan.rfdev <- ((prod_icrisat_all$jan.rf - prod_icrisat_all$jan_mean)/(prod_icrisat_all$jan_mean+0.1))
 prod_icrisat_all$feb.rfdev <- ((prod_icrisat_all$feb.rf - prod_icrisat_all$feb_mean)/(prod_icrisat_all$feb_mean+0.1))
