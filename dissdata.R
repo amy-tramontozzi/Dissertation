@@ -18,10 +18,12 @@ area <- select(prod1997, contains("Area"))
 prod1997$area <- rowSums(area, na.rm = TRUE)
 prod <- select(prod1997, contains("Production"))
 prod1997$prod <- rowSums(prod, na.rm = TRUE)
-yield <- select(prod1997, contains("Yield"))
-prod1997$yield <- rowSums(yield, na.rm = TRUE)
+#yield <- select(prod1997, contains("Yield"))
+#prod1997$yield <- rowSums(yield, na.rm = TRUE)
+
 # Only select total values
 prod1997 <- prod1997[,-4:-240]
+
 
 # Get rid of listed numbers from state and district
 prod1997$state <- sub("^\\d+\\.\\s", "", prod1997$state)
@@ -37,6 +39,7 @@ prod1997$year <- as.numeric(prod1997$year)
 prod1997$district <- as.factor(prod1997$district)
 
 prod1997$area <- prod1997$area/1000
+prod1997$prod <- prod1997$prod/1000
 
 prod2021 <- filter(prod1997, year > 2017)
 prod1997 <- filter(prod1997, year < 2018)
@@ -683,6 +686,7 @@ prod_icrisat_all[,20:39][is.na(prod_icrisat_all[,20:39])] <- 0
 prod_icrisat_all$f.it <- prod_icrisat_all$area.ins/(prod_icrisat_all$icr2017_area)
 prod_icrisat_all$f.it2 <- prod_icrisat_all$area.ins/prod_icrisat_all$area
 prod_icrisat_all$f.it2[prod_icrisat_all$f.it2 > 1] <- 1
+prod_icrisat_all$yield <- prod_icrisat_all$prod/(prod_icrisat_all$area)
 
 prod_icrisat_all$jan.rfdev <- ((prod_icrisat_all$jan.rf - prod_icrisat_all$jan_mean)/(prod_icrisat_all$jan_mean+0.1))
 prod_icrisat_all$feb.rfdev <- ((prod_icrisat_all$feb.rf - prod_icrisat_all$feb_mean)/(prod_icrisat_all$feb_mean+0.1))
