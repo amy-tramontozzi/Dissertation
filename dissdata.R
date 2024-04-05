@@ -269,6 +269,7 @@ same_name_diff_state <- ins %>%
   select(district, state) %>%
   distinct()
 
+# Find rain
 # Rename rain states to ins states
 rainmissing.st <- levels(ins$state)[!(levels(ins$state) %in% levels(rain$state))]
 
@@ -657,7 +658,6 @@ levels(icrisat_normals$district)[levels(icrisat_normals$district)=='Yadadri Bhuv
 levels(icrisat_normals$district)[levels(icrisat_normals$district)=='Yadagiri'] <- 'Yadgiri'
 levels(icrisat_normals$district)[levels(icrisat_normals$district)=='Yeotmal'] <- 'Yavatmal'
 
-
 # Rename temperature districts (also at top but these are extras)
 tempmissing.dis <- levels(climate_data$district)[!(levels(climate_data$district) %in% levels(ins$district))]
 
@@ -668,11 +668,10 @@ levels(climate_data$district)[levels(climate_data$district)=='Nellore'] <- 'Spsr
 levels(climate_data$district)[levels(climate_data$district)=='Prayagraj'] <- 'Allahabad'
 levels(climate_data$district)[levels(climate_data$district)=='Ri Bhoi'] <- 'Ribhoi'
 
-
 # Create ins/rain/prod dataframe
 prod_icrisat_normals <- merge(icrisat_normals, prod1997, by=c("district", "state", "year"))
 
-ins_rain <- merge(ins, rain, by=c("district", "state", "year"))
+ins_rain <- left_join(rain, ins, by=c("district", "state", "year"))
 ins_rain_prod <- merge(ins_rain, prod2021, by=c("district","state", "year"))
 ins_rain_prod <- merge(ins_rain_prod, dist_code, by=c("district","state"))
 
