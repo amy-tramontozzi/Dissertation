@@ -4,27 +4,21 @@
 
 library(tidyverse)
 library(readxl)
-library(stringr)
-library(dplyr)
 library(stringdist)
 library(expss)
 
-
-# Load and tidy prod data 
+# Load and tidy production data 
 ## Summing area, prod, and yield across crops
 prod1997 <- read_excel("prod1997.xls", guess_max = 20000)
-#prod1997[is.na(prod1997)] <- 0
 area <- select(prod1997, contains("Area"))
 prod1997$area <- rowSums(area, na.rm = TRUE)
 prod <- select(prod1997, contains("Production"))
 prod1997$prod <- rowSums(prod, na.rm = TRUE)
-#yield <- select(prod1997, contains("Yield"))
-#prod1997$yield <- rowSums(yield, na.rm = TRUE)
 prod1997$area <- prod1997$area/1000
 prod1997$prod <- prod1997$prod/1000
+prod1997$yield <- prod1997$prod/prod1997$area
 # Only select total values
 prod1997 <- prod1997[,-4:-240]
-prod1997$yield <- prod1997$prod/prod1997$area
 
 # Get rid of listed numbers from state and district
 prod1997$state <- sub("^\\d+\\.\\s", "", prod1997$state)
@@ -32,7 +26,7 @@ prod1997$district <- sub("^\\d+\\.\\s", "", prod1997$district)
 # String to nice title
 prod1997$state <- str_to_title(prod1997$state)
 prod1997$district <- str_to_title(prod1997$district)
-# Just the first year
+# Just the first year in the range
 prod1997$year <- str_sub(prod1997$year, end = -8)
 # Convert state, district, and year into factors
 prod1997$state <- as.factor(prod1997$state)
@@ -60,7 +54,6 @@ ins$district <- sub("&", "and", ins$district)
 ins$state <- as.factor(ins$state)
 ins$district <- as.factor(ins$district)
 
-
 ins <- ins %>%
   group_by(district, state, year) %>%
   summarise(across(everything(), sum))
@@ -75,7 +68,6 @@ rain$state <- sub("&", "and", rain$state)
 rain$district <- sub("&", "and", rain$district)
 rain$state <- as.factor(rain$state)
 rain$district <- as.factor(rain$district)
-#rain$year <- as.factor(rain$year)
 
 rain$jan.rf <- rain$jan.rf/1000
 rain$feb.rf <- rain$feb.rf/1000
@@ -91,21 +83,10 @@ rain$nov.rf <- rain$nov.rf/1000
 rain$dec.rf <- rain$dec.rf/1000
 
 rain <- select(rain, !contains(".ptdef"))
-# Load and tidy climate data
-
-climate_data <- read_excel("climate_data_v5.xlsx")
-climate_data$station <- str_to_title(climate_data$station)
-climate_data$station <- as.factor(climate_data$station)
-climate_data$stationID <- as.factor(climate_data$stationID)
 
 ### RENAMING STATIONS TO DISTRICTS
-stat_dis <- read_excel("station_district.xlsx")
-stat_dis$station <- str_to_title(stat_dis$station)
-climate_data <- merge(climate_data, stat_dis, by = "station")
-climate_data$district <- as.factor(climate_data$district)
 
 # Load and tidy ICRISAT data
-## to use to fix area
 icrisat <- read_csv("ICRISAT-District Level Data.csv")
 names(icrisat)[names(icrisat) == "Dist Name"] <- "district"
 names(icrisat)[names(icrisat) == "State Name"] <- "state"
@@ -118,13 +99,10 @@ icrisat$icr2017_prod <- rowSums(icr_prod, na.rm = TRUE)
 icr_yield <- select(icrisat, contains("YIELD"))
 icrisat$icr2017_yield <- rowSums(icr_yield, na.rm = TRUE)
 icrisat <- icrisat[,-6:-80]
-
 icrisat$state <- as.factor(icrisat$state)
 icrisat$district <- as.factor(icrisat$district)
 
-
-# Load and tidy ICRISAT full precip data 1958-2015
-## TDO NOT USE FOR PRECIP NORMALS, INSTEAD USE BIG RAIN
+# Load and tidy ICRISAT precipitation data 1958-2015
 icrisat_rain <- read_csv("icrisat-normal-rain.csv")
 names(icrisat_rain)[names(icrisat_rain) == "JANUARY NORMAL RAINFALL (Millimeters)"] <- "jan.normal"
 names(icrisat_rain)[names(icrisat_rain) == "FEBRUARY NORMAL RAINFALL (Millimeters)"] <- "feb.normal"
@@ -224,7 +202,7 @@ big_rain$oct_mean <- big_rain$oct_mean/1000
 big_rain$nov_mean <- big_rain$nov_mean/1000
 big_rain$dec_mean <- big_rain$dec_mean/1000
 
-# Need to fix this so that it is columns not just year
+# Merged rainfall normals
 icrisat_normals <- merge(big_rain, icrisat, by=c("Dist Code"))
 icrisat_normals <- icrisat_normals[,-30:-33]
 names(icrisat_normals)[names(icrisat_normals) == "state.x"] <- "state"
@@ -269,7 +247,6 @@ same_name_diff_state <- ins %>%
   select(district, state) %>%
   distinct()
 
-# Find rain
 # Rename rain states to ins states
 rainmissing.st <- levels(ins$state)[!(levels(ins$state) %in% levels(rain$state))]
 
@@ -426,8 +403,6 @@ levels(rain$district)[levels(rain$district)=='Ysr District'] <- 'Y.S.R.'
 levels(rain$district)[levels(rain$district)=='Yadgir'] <- 'Yadgiri'
 levels(rain$district)[levels(rain$district)=='Yamuna Nagar'] <- 'Yamunanagar'
 levels(rain$district)[levels(rain$district)=='Yeotmal'] <- 'Yavatmal'
-
-# 643 districts in common
 
 # Rename prod states to ins states
 
@@ -658,16 +633,6 @@ levels(icrisat_normals$district)[levels(icrisat_normals$district)=='Yadadri Bhuv
 levels(icrisat_normals$district)[levels(icrisat_normals$district)=='Yadagiri'] <- 'Yadgiri'
 levels(icrisat_normals$district)[levels(icrisat_normals$district)=='Yeotmal'] <- 'Yavatmal'
 
-# Rename temperature districts (also at top but these are extras)
-tempmissing.dis <- levels(climate_data$district)[!(levels(climate_data$district) %in% levels(ins$district))]
-
-levels(climate_data$district)[levels(climate_data$district)=='East Singhbhum'] <- 'Purbi Singhbhum'
-levels(climate_data$district)[levels(climate_data$district)=='Gangtok'] <- 'East District'
-levels(climate_data$district)[levels(climate_data$district)=='Gondia'] <- 'Gondiya'
-levels(climate_data$district)[levels(climate_data$district)=='Nellore'] <- 'Spsr Nellore'
-levels(climate_data$district)[levels(climate_data$district)=='Prayagraj'] <- 'Allahabad'
-levels(climate_data$district)[levels(climate_data$district)=='Ri Bhoi'] <- 'Ribhoi'
-
 # Create ins/rain/prod dataframe
 prod_icrisat_normals <- merge(icrisat_normals, prod1997, by=c("district", "state", "year"))
 
@@ -680,10 +645,11 @@ combined_data <- bind_rows(prod_icrisat_normals, ins_rain_prod)
 prod_icrisat_all <- merge(combined_data, common_for_all, by ="Dist Code")
 prod_icrisat_all[,20:39][is.na(prod_icrisat_all[,20:39])] <- 0
 
-prod_icrisat_all$f.it2 <- prod_icrisat_all$area.ins/(prod_icrisat_all$icr2017_area)
-prod_icrisat_all$f.it <- prod_icrisat_all$area.ins/prod_icrisat_all$area
-prod_icrisat_all$f.it[prod_icrisat_all$f.it > 1] <- 1
+prod_icrisat_all$f.it2 <- prod_icrisat_all$area.ins/(prod_icrisat_all$icr2017_area) # fraction by 2017 area
+prod_icrisat_all$f.it <- prod_icrisat_all$area.ins/prod_icrisat_all$area # fraction by present area
+prod_icrisat_all$f.it[prod_icrisat_all$f.it > 1] <- 1 # set maximum fraction bound
 
+# Rainfall deviations (add small amount as rainfall can = 0)
 prod_icrisat_all$jan.rfdev <- ((prod_icrisat_all$jan.rf - prod_icrisat_all$jan_mean)/(prod_icrisat_all$jan_mean+0.1))
 prod_icrisat_all$feb.rfdev <- ((prod_icrisat_all$feb.rf - prod_icrisat_all$feb_mean)/(prod_icrisat_all$feb_mean+0.1))
 prod_icrisat_all$mar.rfdev <- ((prod_icrisat_all$mar.rf - prod_icrisat_all$mar_mean)/(prod_icrisat_all$mar_mean+0.1))
@@ -696,8 +662,6 @@ prod_icrisat_all$sep.rfdev <- ((prod_icrisat_all$sep.rf - prod_icrisat_all$sep_m
 prod_icrisat_all$oct.rfdev <- ((prod_icrisat_all$oct.rf - prod_icrisat_all$oct_mean)/(prod_icrisat_all$oct_mean+0.1))
 prod_icrisat_all$nov.rfdev <- ((prod_icrisat_all$nov.rf - prod_icrisat_all$nov_mean)/(prod_icrisat_all$nov_mean+0.1))
 prod_icrisat_all$dec.rfdev <- ((prod_icrisat_all$dec.rf - prod_icrisat_all$dec_mean)/(prod_icrisat_all$dec_mean+0.1))
-
-prod_icrisat_all[is.na(prod_icrisat_all)] <- '.'
 
 library(rstatix)
 
@@ -740,8 +704,6 @@ average_rainfall <- prod_icrisat_all %>%
 
 average_rainfall_melted <- melt(average_rainfall, id.vars = "year", variable.name = "month", value.name = "avg_rainfall")
 
-
-
 # Plot the average monthly rainfall across districts by year
 ggplot(average_rainfall_melted, aes(x = year, y = avg_rainfall, color = month)) +
   geom_line() +
@@ -751,53 +713,10 @@ ggplot(average_rainfall_melted, aes(x = year, y = avg_rainfall, color = month)) 
   scale_x_continuous(breaks = unique(average_rainfall_melted$year)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Merge ins/rain/prod with ICRISAT only for area use
-rf_only <- merge(ins, icrisat_normals, by=c("district", "state"))
-rf_only$f.it <- rf_only$area.ins/(rf_only$icr2017_area)
-# The below code is used to write a CSV for the dataset with the matched names in ICRISAT
-total <- merge(total, icrisat_rain, by=c("district", "state"))
-total$f.it <- total$area.ins/(total$icr2017_area)
-total$jan.rfdev <- ((total$jan.rf - total$jan.normal)/total$jan.normal)
-total$feb.rfdev <- ((total$feb.rf - total$feb.normal)/total$feb.normal)
-total$mar.rfdev <- ((total$mar.rf - total$mar.normal)/total$mar.normal)
-total$apr.rfdev <- ((total$apr.rf - total$apr.normal)/total$apr.normal)
-total$may.rfdev <- ((total$may.rf - total$may.normal)/total$may.normal)
-total$jun.rfdev <- ((total$jun.rf - total$jun.normal)/total$jun.normal)
-total$jul.rfdev <- ((total$jul.rf - total$jul.normal)/total$jul.normal)
-total$aug.rfdev <- ((total$aug.rf - total$aug.normal)/total$aug.normal)
-total$sep.rfdev <- ((total$sep.rf - total$sep.normal)/total$sep.normal)
-total$oct.rfdev <- ((total$oct.rf - total$oct.normal)/total$oct.normal)
-total$nov.rfdev <- ((total$nov.rf - total$nov.normal)/total$nov.normal)
-total$dec.rfdev <- ((total$dec.rf - total$dec.normal)/total$dec.normal)
 
-# Use CDSP data to create state-wise temp values. Limited to 2020 with 50 state obs
-climate_data_2018 <- filter(climate_data, year > 2017) # All climate data w NAs from 2018
-climate_data_agg <- aggregate(. ~ district + year, FUN = mean, data=climate_data_2018, na.rm = TRUE) # Aggregate stations to districts
-climate_ins_2018 <- inner_join(ins, climate_data_agg, by=c("district" = "district", "year" = "year")) # Merge ins and 2018 climate
-climate_ins_2018 <- climate_ins_2018[,-4:-25]
-climate_ins_2018 <- aggregate(. ~ state + year, data = climate_ins_2018, FUN = mean, na.rm = TRUE)
-climate_ins_2018[, 4:39][climate_ins_2018[, 4:39] == 0] <- NA # Seems like scraping did not work well
 
-rf_remove <- select(climate_ins_2018, contains("rf"))
-climate_ins_2018 <- climate_ins_2018[, !names(climate_ins_2018) %in% names(rf_remove)] # Get rid of rainfall categories
-climate_ins_2018 <- climate_ins_2018[,-3]
 
-temp_rf_only <- inner_join(rf_only, climate_ins_2018, by=c("state" = "state", "year.x" = "year")) # Merge rf only and 2018 climate
-temp_rfdev <- inner_join(total, climate_ins_2018, by=c("state" = "state", "year" = "year")) # Merge rf devs and 2018 climate
-
-# The code below is to replace NAs with . for STATA
-rf_only[, 4:57][is.na(rf_only[, 4:57])] <- '.'
-total[, 4:80][is.na(total[, 4:80])] <- '.'
-temp_rf_only[, 4:81][is.na(temp_rf_only[, 4:81])] <- '.'
-temp_rfdev[, 4:104][is.na(temp_rfdev[, 4:104])] <- '.'
-
-# GLMs
-model_bins <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) +  
-                    f.it + I(jun.rf*f.it) + I(jul.rf*f.it) + factor(year.x) 
-                  + factor(district), data = full)
-
-model <- glm(log(prod) ~ aug.rfdev + f.it + I(aug.rfdev*f.it) + factor(year) + factor(district), data = temp_rfdev)
-# Rainfall categories 
+# Prelimary GLMs
 
 full$jun.rain_type <- as.factor(ifelse(full$jun.ptdef == -1, 'No Rain',
                                  ifelse(full$jun.ptdef >= 0.20, 'Excess',
@@ -815,6 +734,16 @@ total$sep.rain_type <- as.factor(ifelse(total$sep.ptdef == -1, 'No Rain',
                                  ifelse(total$sep.ptdef >= 0.20, 'Excess',
                                  ifelse(total$sep.ptdef >= -.19 & total$sep.ptdef <= .19, 'Normal',
                                  ifelse(total$sep.ptdef <= -.20, 'Deficient', 'Other')))))
+model_bins <- glm(log(prod) ~ factor(jun.rain_type) + factor(jul.rain_type) +  
+                    f.it + I(jun.rf*f.it) + I(jul.rf*f.it) + factor(year.x) 
+                  + factor(district), data = full)
+
+model <- glm(log(prod) ~ aug.rfdev + f.it + I(aug.rfdev*f.it) + factor(year) + factor(district), data = temp_rfdev)
+# Rainfall categories 
+
+
+
+prod_icrisat_all[is.na(prod_icrisat_all)] <- '.' # for analysis in STATA
 
 # Create variable labels
 total = apply_labels(total,
@@ -846,7 +775,7 @@ total = apply_labels(total,
                      jan.rf = "January rainfall (in mm)",
                      jan.ptdef = "% departures of observed rainfall from January district 
                      normals",
-                     feb.rf = "Februraru rainfall (in mm)",
+                     feb.rf = "February rainfall (in mm)",
                      feb.ptdef = "% departures of observed rainfall from February district 
                      normals",
                      mar.rf = "March rainfall (in mm)",
