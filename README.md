@@ -4,7 +4,7 @@
 This repository contains the dataset and scripts used for my senior-year dissertation, in which I scraped historical Indian meteorological data in Python and constructed an original empirical framework to evaluate the existence of moral hazard within the Indian crop insurance system. The modeling and analysis were conducted in STATA, and data preprocessing was performed using R.
 
 Contents
--**Data Files: Includes all compiled datasets used in the analysis.
+- **Data Files: Includes all compiled datasets used in the analysis.
 
 R Scripts: Scripts to clean, merge, and preprocess the datasets.
 
